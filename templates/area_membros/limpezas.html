@@ -4,17 +4,30 @@
 
 {% block content %}
 <div class="container mt-5">
-    <h2 class="titulo-secao"><i class="bi bi-bucket"></i> Escala de Limpezas</h2>
+    <div class="d-flex justify-content-between align-items-center">
+        <h2 class="titulo-secao"><i class="bi bi-bucket"></i> Escala de Limpezas</h2>
+        <a href="/dashboard" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Voltar</a>
+    </div>
     <hr class="linha-ambar-left">
     
     {% if limpezas %}
         {% for item in limpezas %}
         <div class="aviso-item">
-            <strong class="titulo-secao">{{ item.titulo }}</strong>
-            {% if item.data_evento %}
-            <small class="text-muted"><i class="bi bi-clock"></i> {{ item.data_evento.strftime('%d/%m/%Y às %H:%M') }}</small>
-            {% endif %}
-            <div class="mt-2 mb-0" style="white-space: pre-line;">{{ item.conteudo }}</div>
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <strong class="titulo-secao">{{ item.titulo }}</strong>
+                    {% if item.data_evento %}
+                    <small class="text-muted"><i class="bi bi-clock"></i> {{ item.data_evento.strftime('%d/%m/%Y às %H:%M') }}</small>
+                    {% endif %}
+                    <div class="mt-2 mb-0" style="white-space: pre-line;">{{ item.conteudo }}</div>
+                </div>
+                {% if session.is_admin %}
+                <div class="d-flex gap-1 ms-3">
+                    <a href="/admin/editar/{{ item.id }}" class="btn btn-sm btn-outline-primary" title="Editar"><i class="bi bi-pencil"></i></a>
+                    <a href="/admin/excluir/{{ item.id }}" class="btn btn-sm btn-outline-danger" title="Excluir" onclick="return confirm('Tem certeza que deseja excluir?')"><i class="bi bi-trash"></i></a>
+                </div>
+                {% endif %}
+            </div>
         </div>
         {% endfor %}
     {% else %}

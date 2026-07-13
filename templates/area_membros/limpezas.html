@@ -14,7 +14,7 @@
             {% if item.data_evento %}
             <small class="text-muted"><i class="bi bi-clock"></i> {{ item.data_evento.strftime('%d/%m/%Y às %H:%M') }}</small>
             {% endif %}
-            <p class="mt-2 mb-0">{{ item.conteudo }}</p>
+            <div class="mt-2 mb-0" style="white-space: pre-line;">{{ item.conteudo }}</div>
         </div>
         {% endfor %}
     {% else %}

@@ -12,7 +12,7 @@
         <div class="aviso-item">
             <strong class="titulo-secao">{{ item.titulo }}</strong>
             <small class="text-muted"><i class="bi bi-calendar"></i> {{ item.data_publicacao.strftime('%d/%m/%Y') }}</small>
-            <p class="mt-2 mb-0">{{ item.conteudo }}</p>
+            <div class="mt-2 mb-0" style="white-space: pre-line;">{{ item.conteudo }}</div>
         </div>
         {% endfor %}
     {% else %}

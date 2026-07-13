@@ -186,10 +186,16 @@ def criar_admin_inicial():
         db.session.commit()
         print("✅ Usuário admin criado: admin@templo.com / mudar123")
 
-# Criar tabelas e admin ao iniciar (funciona com Gunicorn)
-with app.app_context():
-    db.create_all()
-    criar_admin_inicial()
+# Inicializar banco na primeira requisição
+_banco_inicializado = False
+
+@app.before_request
+def inicializar_banco():
+    global _banco_inicializado
+    if not _banco_inicializado:
+        db.create_all()
+        criar_admin_inicial()
+        _banco_inicializado = True
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

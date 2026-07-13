@@ -84,7 +84,7 @@
         <div class="container mt-3">
             <a href="/dashboard" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
         </div>
-        {% elif not session.user_id and request.path != '/' %}
+        {% elif not session.user_id and request.path != '/' and request.path != '/login' %}
         <div class="container mt-3">
             <a href="/" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
         </div>

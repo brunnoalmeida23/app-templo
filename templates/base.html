@@ -78,13 +78,13 @@
         </div>
     </nav>
 
-    <!-- ============ CONTEÚDO PRINCIPAL ============ -->
+      <!-- ============ CONTEÚDO PRINCIPAL ============ -->
     <main>
-        {% if session.user_id %}
+        {% if session.user_id and request.path != '/dashboard' %}
         <div class="container mt-3">
             <a href="/dashboard" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
         </div>
-        {% elif request.path != '/' %}
+        {% elif not session.user_id and request.path != '/' %}
         <div class="container mt-3">
             <a href="/" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
         </div>

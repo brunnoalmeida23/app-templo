@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Limpezas - TUPBAO{% endblock %}
+
+{% block menu_items %}
+<li class="nav-item"><a class="nav-link" href="/dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+<li class="nav-item"><span class="nav-link text-white-50">{{ session.user_nome }}</span></li>
+<li class="nav-item"><a class="nav-link" href="/logout" style="color: var(--ambar) !important;">Sair</a></li>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="titulo-secao"><i class="bi bi-bucket"></i> Escala de Limpezas</h2>
+    <hr class="linha-ambar-left">
+    
+    {% if limpezas %}
+        {% for item in limpezas %}
+        <div class="aviso-item">
+            <strong class="titulo-secao">{{ item.titulo }}</strong>
+            {% if item.data_evento %}
+            <small class="text-muted"><i class="bi bi-clock"></i> {{ item.data_evento.strftime('%d/%m/%Y às %H:%M') }}</small>
+            {% endif %}
+            <p class="mt-2 mb-0">{{ item.conteudo }}</p>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p>Nenhuma escala cadastrada.</p>
+    {% endif %}
+</div>
+{% endblock %}

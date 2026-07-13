@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Financeiro - TUPBAO{% endblock %}
+
+{% block menu_items %}
+<li class="nav-item"><a class="nav-link" href="/dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+<li class="nav-item"><span class="nav-link text-white-50">{{ session.user_nome }}</span></li>
+<li class="nav-item"><a class="nav-link" href="/logout" style="color: var(--ambar) !important;">Sair</a></li>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="titulo-secao"><i class="bi bi-cash-coin"></i> Financeiro</h2>
+    <hr class="linha-ambar-left">
+    
+    {% if financeiro %}
+        {% for item in financeiro %}
+        <div class="aviso-item">
+            <strong class="titulo-secao">{{ item.titulo }}</strong>
+            <small class="text-muted"><i class="bi bi-calendar"></i> {{ item.data_publicacao.strftime('%d/%m/%Y') }}</small>
+            <p class="mt-2 mb-0">{{ item.conteudo }}</p>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p>Nenhum registro financeiro no momento.</p>
+    {% endif %}
+</div>
+</div>
+{% endblock %}

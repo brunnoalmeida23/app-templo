@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Templo de Umbanda Pai Benedito das Almas e Obaluaê{% endblock %}
+
+{% block content %}
+<div class="container mt-5 text-center">
+    <h1 class="titulo-secao">Saravá! Seja bem-vindo</h1>
+    <p class="lead">Templo de Umbanda Pai Benedito das Almas e Obaluaê</p>
+    <hr class="linha-ambar">
+
+    <!-- Próximas Giras -->
+    <h3 class="mt-5 titulo-secao"><i class="bi bi-calendar-heart"></i> Próximas Giras</h3>
+    <hr class="linha-ambar">
+    <div class="row mt-4">
+        {% if giras %}
+            {% for gira in giras %}
+            <div class="col-lg-4 col-md-6 mb-3">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="titulo-secao">{{ gira.titulo }}</h5>
+                        {% if gira.data_evento %}
+                        <p class="text-muted"><i class="bi bi-clock"></i> {{ gira.data_evento.strftime('%d/%m/%Y às %H:%M') }}</p>
+                        {% endif %}
+                        <p>{{ gira.conteudo[:120] }}{% if gira.conteudo|length > 120 %}...{% endif %}</p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="py-4">
+                    <i class="bi bi-calendar-x" style="font-size: 3rem; color: var(--roxo);"></i>
+                    <p class="mt-3">Nenhuma gira cadastrada ainda.</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Projetos Sociais -->
+    <h3 class="mt-5 titulo-secao"><i class="bi bi-heart"></i> Projetos Sociais</h3>
+    <hr class="linha-ambar">
+    <div class="row mt-4">
+        {% if projetos %}
+            {% for projeto in projetos %}
+            <div class="col-lg-4 col-md-6 mb-3">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="titulo-secao">{{ projeto.titulo }}</h5>
+                        {% if projeto.data_evento %}
+                        <p class="text-muted"><i class="bi bi-clock"></i> {{ projeto.data_evento.strftime('%d/%m/%Y às %H:%M') }}</p>
+                        {% endif %}
+                        <p>{{ projeto.conteudo[:120] }}{% if projeto.conteudo|length > 120 %}...{% endif %}</p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="py-4">
+                    <i class="bi bi-heart" style="font-size: 3rem; color: var(--roxo);"></i>
+                    <p class="mt-3">Em breve informações sobre nossos projetos sociais.</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

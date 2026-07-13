@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Painel do Membro - TUPBAO{% endblock %}
+
+{% block menu_items %}
+<li class="nav-item"><a class="nav-link" href="/"><i class="bi bi-house"></i> Início</a></li>
+<li class="nav-item"><a class="nav-link" href="/agenda"><i class="bi bi-calendar3"></i> Agenda</a></li>
+<li class="nav-item"><span class="nav-link text-white-50"><i class="bi bi-person"></i> {{ session.user_nome }}</span></li>
+<li class="nav-item"><a class="nav-link" href="/logout" style="color: var(--ambar) !important;"><i class="bi bi-box-arrow-right"></i> Sair</a></li>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="titulo-secao"><i class="bi bi-speedometer2"></i> Painel do Membro</h2>
+    <hr class="linha-ambar-left">
+
+    <!-- Cards de acesso rápido -->
+    <div class="row mt-4">
+        <div class="col-lg-4 col-md-6 mb-3">
+            <a href="/agenda" class="card card-dash shadow-sm p-3 text-center text-decoration-none text-dark">
+                <i class="bi bi-calendar-heart" style="font-size: 2rem; color: var(--roxo);"></i>
+                <h5 class="mt-2">📅 Agenda</h5>
+                <p class="text-muted small">Giras e eventos</p>
+            </a>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-3">
+            <a href="/dashboard/limpezas" class="card card-dash shadow-sm p-3 text-center text-decoration-none text-dark">
+                <i class="bi bi-bucket" style="font-size: 2rem; color: var(--roxo);"></i>
+                <h5 class="mt-2">🧹 Limpezas</h5>
+                <p class="text-muted small">Escala da casa</p>
+            </a>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-3">
+            <a href="/dashboard/financeiro" class="card card-dash shadow-sm p-3 text-center text-decoration-none text-dark">
+                <i class="bi bi-cash-coin" style="font-size: 2rem; color: var(--roxo);"></i>
+                <h5 class="mt-2">💰 Financeiro</h5>
+                <p class="text-muted small">Transparência</p>
+            </a>
+        </div>
+        {% if session.is_admin %}
+        <div class="col-lg-4 col-md-6 mb-3">
+            <a href="/admin" class="card card-dash shadow-sm p-3 text-center text-decoration-none text-dark" style="border-top-color: var(--roxo);">
+                <i class="bi bi-gear" style="font-size: 2rem; color: var(--roxo);"></i>
+                <h5 class="mt-2">⚙️ Admin</h5>
+                <p class="text-muted small">Gerenciar conteúdo</p>
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Avisos do Dirigente -->
+    <h4 class="mt-4 titulo-secao"><i class="bi bi-megaphone"></i> Avisos do Dirigente</h4>
+    <hr class="linha-ambar-left">
+    {% if avisos %}
+        {% for aviso in avisos %}
+        <div class="aviso-item">
+            <strong class="titulo-secao">{{ aviso.titulo }}</strong>
+            <small class="text-muted"><i class="bi bi-calendar"></i> {{ aviso.data_publicacao.strftime('%d/%m/%Y') }}</small>
+            <p class="mt-2 mb-0">{{ aviso.conteudo }}</p>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="text-center py-4 bg-white rounded shadow-sm">
+            <i class="bi bi-megaphone" style="font-size: 2rem; color: var(--roxo);"></i>
+            <p class="mt-2 mb-0">Nenhum aviso no momento. Axé! 🙏</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

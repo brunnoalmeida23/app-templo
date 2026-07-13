@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Login - TUPBAO{% endblock %}
+
+{% block menu_items %}
+<li class="nav-item"><a class="nav-link" href="/"><i class="bi bi-house"></i> Início</a></li>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-4 col-sm-8 col-11">
+            <div class="card login-card shadow">
+                <div class="card-body p-4">
+                    <div class="text-center mb-3">
+                        <img src="https://res.cloudinary.com/defafu3v2/images/c_scale,w_448,h_318,dpr_2/f_auto,q_auto/v100/tupbao.com.br/wp-content/themes/tupbao-theme/assets/images/logo-tupbao/logo-tupbao.png?_i=AA" alt="TUPBAO" class="login-logo">
+                    </div>
+                    <h3 class="text-center mb-4 titulo-secao"><i class="bi bi-lock-fill"></i> Área dos Membros</h3>
+                    
+                    {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                    <i class="bi bi-exclamation-triangle"></i> {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label class="form-label"><i class="bi bi-envelope"></i> E-mail</label>
+                            <input type="email" name="email" class="form-control" required placeholder="seu@email.com">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label"><i class="bi bi-key"></i> Senha</label>
+                            <input type="password" name="senha" class="form-control" required placeholder="Sua senha">
+                        </div>
+                        <button type="submit" class="btn btn-templo w-100 py-2">
+                            <i class="bi bi-box-arrow-in-right"></i> Entrar
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

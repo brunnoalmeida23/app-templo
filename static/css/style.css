@@ -1,0 +1,180 @@
+/* ============ CORES DO TEMPLO ============ */
+:root {
+    --roxo: #4A1942;
+    --ambar: #C4922E;
+    --bege: #F5F0EB;
+    --roxo-escuro: #3a1033;
+}
+
+/* ============ BASE ============ */
+body {
+    background-color: var(--bege);
+    color: #333;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+}
+
+/* ============ NAVBAR ============ */
+.navbar {
+    background-color: var(--roxo) !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.navbar-brand img {
+    height: 45px;
+}
+
+.navbar-nav .nav-link {
+    color: #fff !important;
+    transition: 0.3s;
+}
+
+.navbar-nav .nav-link:hover {
+    color: var(--ambar) !important;
+}
+
+/* ============ RODAPÉ ============ */
+.footer {
+    background-color: var(--roxo);
+    margin-top: auto;
+}
+
+/* ============ TÍTULOS ============ */
+.titulo-secao {
+    color: var(--roxo);
+    font-weight: 700;
+}
+
+.linha-ambar {
+    border: 2px solid var(--ambar);
+    width: 80px;
+    opacity: 1;
+    margin: 10px auto 30px;
+}
+
+.linha-ambar-left {
+    border: 2px solid var(--ambar);
+    width: 80px;
+    opacity: 1;
+    margin: 10px 0 30px;
+}
+
+/* ============ CARDS ============ */
+.card {
+    border: none;
+    border-left: 4px solid var(--ambar);
+    border-radius: 8px;
+    transition: 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15) !important;
+}
+
+.card-dash {
+    border: none;
+    border-top: 4px solid var(--ambar);
+    transition: 0.3s;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+}
+
+.card-dash:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15) !important;
+}
+
+/* ============ BOTÕES ============ */
+.btn-templo {
+    background-color: var(--roxo);
+    color: #fff;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 6px;
+    transition: 0.3s;
+}
+
+.btn-templo:hover {
+    background-color: var(--roxo-escuro);
+    color: #fff;
+}
+
+.btn-ambar {
+    background-color: var(--ambar);
+    color: #fff;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 6px;
+    transition: 0.3s;
+}
+
+.btn-ambar:hover {
+    background-color: #a87a1e;
+    color: #fff;
+}
+
+/* ============ LISTA DE GIRAS ============ */
+.list-group-item {
+    border: none;
+    border-left: 4px solid var(--ambar);
+    margin-bottom: 15px;
+    border-radius: 8px;
+}
+
+.data-gira {
+    color: var(--roxo);
+    font-weight: bold;
+}
+
+/* ============ AVISOS ============ */
+.aviso-item {
+    background-color: #fff;
+    border-left: 4px solid var(--roxo);
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 0 8px 8px 0;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+/* ============ LOGIN ============ */
+.login-card {
+    border: none;
+    border-top: 4px solid var(--ambar);
+    border-radius: 10px;
+}
+
+.login-logo {
+    height: 70px;
+}
+
+/* ============ RESPONSIVO ============ */
+@media (max-width: 768px) {
+    .navbar-brand img {
+        height: 35px;
+    }
+    
+    h1 {
+        font-size: 1.6rem;
+    }
+    
+    h2 {
+        font-size: 1.4rem;
+    }
+    
+    .container {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+    
+    .card-dash {
+        margin-bottom: 10px;
+    }
+}

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Nova Publicação - TUPBAO{% endblock %}
+
+{% block menu_items %}
+<li class="nav-item"><a class="nav-link" href="/admin"><i class="bi bi-gear"></i> Painel Admin</a></li>
+<li class="nav-item"><a class="nav-link" href="/dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+<li class="nav-item"><span class="nav-link text-white-50">{{ session.user_nome }}</span></li>
+<li class="nav-item"><a class="nav-link" href="/logout" style="color: var(--ambar) !important;">Sair</a></li>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <h2 class="titulo-secao"><i class="bi bi-plus-circle"></i> Nova Publicação</h2>
+    <hr class="linha-ambar-left">
+
+    <div class="card shadow">
+        <div class="card-body p-4">
+            <form method="POST">
+                <div class="mb-3">
+                    <label class="form-label"><i class="bi bi-tag"></i> Tipo de Publicação</label>
+                    <select name="tipo" class="form-select" required>
+                        <option value="">Selecione...</option>
+                        <option value="gira">🕯️ Gira</option>
+                        <option value="aviso">📢 Aviso</option>
+                        <option value="projeto">🤲 Projeto Social</option>
+                        <option value="limpeza">🧹 Limpeza</option>
+                        <option value="financeiro">💰 Financeiro</option>
+                        <option value="noticia">📰 Notícia</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label"><i class="bi bi-pencil"></i> Título</label>
+                    <input type="text" name="titulo" class="form-control" required placeholder="Ex: Gira de Preto-Velho">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label"><i class="bi bi-clock"></i> Data do Evento (opcional — para giras, limpezas, projetos)</label>
+                    <input type="datetime-local" name="data_evento" class="form-control">
+                    <small class="text-muted">Deixe em branco se for apenas um aviso ou informação.</small>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label"><i class="bi bi-text-paragraph"></i> Conteúdo</label>
+                    <textarea name="conteudo" class="form-control" rows="6" required placeholder="Descreva aqui..."></textarea>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-ambar"><i class="bi bi-check-lg"></i> Publicar</button>
+                    <a href="/admin" class="btn btn-outline-secondary">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

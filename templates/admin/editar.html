@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Publicação - TUPBAO{% endblock %}
+
+{% block menu_items %}
+<li class="nav-item"><a class="nav-link" href="/admin"><i class="bi bi-gear"></i> Painel Admin</a></li>
+<li class="nav-item"><a class="nav-link" href="/dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+<li class="nav-item"><span class="nav-link text-white-50">{{ session.user_nome }}</span></li>
+<li class="nav-item"><a class="nav-link" href="/logout" style="color: var(--ambar) !important;">Sair</a></li>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <h2 class="titulo-secao"><i class="bi bi-pencil-square"></i> Editar Publicação</h2>
+    <hr class="linha-ambar-left">
+
+    <div class="card shadow">
+        <div class="card-body p-4">
+            <form method="POST">
+                <div class="mb-3">
+                    <label class="form-label"><i class="bi bi-tag"></i> Tipo</label>
+                    <select name="tipo" class="form-select" required>
+                        <option value="gira" {% if pub.tipo == 'gira' %}selected{% endif %}>🕯️ Gira</option>
+                        <option value="aviso" {% if pub.tipo == 'aviso' %}selected{% endif %}>📢 Aviso</option>
+                        <option value="projeto" {% if pub.tipo == 'projeto' %}selected{% endif %}>🤲 Projeto Social</option>
+                        <option value="limpeza" {% if pub.tipo == 'limpeza' %}selected{% endif %}>🧹 Limpeza</option>
+                        <option value="financeiro" {% if pub.tipo == 'financeiro' %}selected{% endif %}>💰 Financeiro</option>
+                        <option value="noticia" {% if pub.tipo == 'noticia' %}selected{% endif %}>📰 Notícia</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label"><i class="bi bi-pencil"></i> Título</label>
+                    <input type="text" name="titulo" class="form-control" value="{{ pub.titulo }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label"><i class="bi bi-clock"></i> Data do Evento</label>
+                    <input type="datetime-local" name="data_evento" class="form-control" 
+                           value="{% if pub.data_evento %}{{ pub.data_evento.strftime('%Y-%m-%dT%H:%M') }}{% endif %}">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label"><i class="bi bi-text-paragraph"></i> Conteúdo</label>
+                    <textarea name="conteudo" class="form-control" rows="6" required>{{ pub.conteudo }}</textarea>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-ambar"><i class="bi bi-check-lg"></i> Salvar Alterações</button>
+                    <a href="/admin" class="btn btn-outline-secondary">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

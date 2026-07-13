@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Painel Admin - TUPBAO{% endblock %}
+
+{% block menu_items %}
+<li class="nav-item"><a class="nav-link" href="/dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+<li class="nav-item"><span class="nav-link text-white-50"><i class="bi bi-person-check"></i> {{ session.user_nome }}</span></li>
+<li class="nav-item"><a class="nav-link" href="/logout" style="color: var(--ambar) !important;"><i class="bi bi-box-arrow-right"></i> Sair</a></li>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center">
+        <h2 class="titulo-secao"><i class="bi bi-gear"></i> Painel Administrativo</h2>
+        <a href="/admin/cadastrar" class="btn btn-ambar"><i class="bi bi-plus-lg"></i> Nova Publicação</a>
+    </div>
+    <hr class="linha-ambar-left">
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    {% if publicacoes %}
+    <div class="table-responsive">
+        <table class="table table-hover bg-white shadow-sm rounded">
+            <thead style="background-color: var(--roxo); color: white;">
+                <tr>
+                    <th>Título</th>
+                    <th>Tipo</th>
+                    <th>Data Evento</th>
+                    <th>Publicado em</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pub in publicacoes %}
+                <tr>
+                    <td><strong>{{ pub.titulo[:50] }}</strong></td>
+                    <td>
+                        {% if pub.tipo == 'gira' %}<span class="badge" style="background-color: var(--roxo);">🕯️ Gira</span>
+                        {% elif pub.tipo == 'aviso' %}<span class="badge bg-warning text-dark">📢 Aviso</span>
+                        {% elif pub.tipo == 'projeto' %}<span class="badge bg-success">🤲 Projeto</span>
+                        {% elif pub.tipo == 'limpeza' %}<span class="badge bg-info text-dark">🧹 Limpeza</span>
+                        {% elif pub.tipo == 'financeiro' %}<span class="badge bg-secondary">💰 Financeiro</span>
+                        {% elif pub.tipo == 'noticia' %}<span class="badge bg-primary">📰 Notícia</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if pub.data_evento %}
+                            {{ pub.data_evento.strftime('%d/%m/%Y %H:%M') }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td>{{ pub.data_publicacao.strftime('%d/%m/%Y') }}</td>
+                    <td>
+                        <a href="/admin/editar/{{ pub.id }}" class="btn btn-sm btn-outline-primary" title="Editar"><i class="bi bi-pencil"></i></a>
+                        <a href="/admin/excluir/{{ pub.id }}" class="btn btn-sm btn-outline-danger" title="Excluir" onclick="return confirm('Tem certeza que deseja excluir?')"><i class="bi bi-trash"></i></a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5 bg-white rounded shadow-sm">
+        <i class="bi bi-inbox" style="font-size: 4rem; color: var(--roxo);"></i>
+        <p class="lead mt-3">Nenhuma publicação cadastrada.</p>
+        <a href="/admin/cadastrar" class="btn btn-ambar"><i class="bi bi-plus-lg"></i> Criar Primeira Publicação</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

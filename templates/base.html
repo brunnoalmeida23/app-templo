@@ -80,6 +80,13 @@
 
     <!-- ============ CONTEÚDO PRINCIPAL ============ -->
     <main>
+        <div class="container mt-3">
+            {% if session.user_id %}
+            <a href="/dashboard" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
+            {% else %}
+            <a href="/" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
+            {% endif %}
+        </div>
         {% block content %}{% endblock %}
     </main>
 

@@ -172,6 +172,32 @@ def excluir_publicacao(id):
     flash('🗑️ Publicação excluída.')
     return redirect(url_for('admin'))
 
+@app.route('/perfil', methods=['GET', 'POST'])
+def perfil():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    user = Usuario.query.get(session['user_id'])
+    
+    if request.method == 'POST':
+        senha_atual = request.form['senha_atual']
+        nova_senha = request.form['nova_senha']
+        confirmar_senha = request.form['confirmar_senha']
+        
+        if not check_password_hash(user.senha, senha_atual):
+            flash('Senha atual incorreta.')
+        elif nova_senha != confirmar_senha:
+            flash('Nova senha e confirmação não conferem.')
+        elif len(nova_senha) < 6:
+            flash('A nova senha deve ter pelo menos 6 caracteres.')
+        else:
+            user.senha = generate_password_hash(nova_senha)
+            db.session.commit()
+            flash('✅ Senha alterada com sucesso!')
+            return redirect(url_for('dashboard'))
+    
+    return render_template('perfil.html')
+
 # ============ INICIALIZAÇÃO ============
 
 def criar_admin_inicial():

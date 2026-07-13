@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Meu Perfil - TUPBAO{% endblock %}
+
+{% block menu_items %}
+<li class="nav-item"><a class="nav-link" href="/dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+<li class="nav-item"><span class="nav-link text-white-50"><i class="bi bi-person"></i> {{ session.user_nome }}</span></li>
+<li class="nav-item"><a class="nav-link" href="/logout" style="color: var(--ambar) !important;"><i class="bi bi-box-arrow-right"></i> Sair</a></li>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <h2 class="titulo-secao"><i class="bi bi-person-gear"></i> Meu Perfil</h2>
+            <hr class="linha-ambar-left">
+
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-info alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="card shadow">
+                <div class="card-body p-4">
+                    <h5 class="titulo-secao mb-4"><i class="bi bi-lock"></i> Alterar Senha</h5>
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label class="form-label">Senha atual</label>
+                            <input type="password" name="senha_atual" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Nova senha</label>
+                            <input type="password" name="nova_senha" class="form-control" required placeholder="Mínimo 6 caracteres">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Confirmar nova senha</label>
+                            <input type="password" name="confirmar_senha" class="form-control" required>
+                        </div>
+                        <button type="submit" class="btn btn-templo w-100"><i class="bi bi-check-lg"></i> Alterar Senha</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

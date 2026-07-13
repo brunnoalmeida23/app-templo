@@ -186,8 +186,10 @@ def criar_admin_inicial():
         db.session.commit()
         print("✅ Usuário admin criado: admin@templo.com / mudar123")
 
+# Criar tabelas e admin ao iniciar (funciona com Gunicorn)
+with app.app_context():
+    db.create_all()
+    criar_admin_inicial()
+
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-        criar_admin_inicial()
     app.run(debug=True, host='0.0.0.0', port=5000)

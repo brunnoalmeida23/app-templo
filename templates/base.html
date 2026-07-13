@@ -30,18 +30,49 @@
         <div class="container">
             <a class="navbar-brand fw-bold" href="/">
                 <img src="https://res.cloudinary.com/defafu3v2/images/c_scale,w_448,h_318,dpr_2/f_auto,q_auto/v100/tupbao.com.br/wp-content/themes/tupbao-theme/assets/images/logo-tupbao/logo-tupbao.png?_i=AA" alt="TUPBAO">
-                {% block brand_text %}{% endblock %}
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuPrincipal" aria-controls="menuPrincipal" aria-expanded="false" aria-label="Menu">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="menuPrincipal">
                 <ul class="navbar-nav ms-auto">
-                    {% block menu_items %}
-                    <li class="nav-item"><a class="nav-link" href="/"><i class="bi bi-house"></i> Início</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/agenda"><i class="bi bi-calendar3"></i> Agenda</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/login"><i class="bi bi-lock"></i> Membros</a></li>
-                    {% endblock %}
+                    {% if session.user_id %}
+                        <!-- USUÁRIO LOGADO -->
+                        <li class="nav-item"><a class="nav-link" href="/dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+                        
+                        {% if session.is_admin %}
+                        <!-- MENU ADMIN COM DROPDOWN -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="menuAdmin" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: var(--ambar) !important;">
+                                <i class="bi bi-person-check"></i> Dirigente
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="menuAdmin">
+                                <li><a class="dropdown-item" href="/admin"><i class="bi bi-gear"></i> Painel Admin</a></li>
+                                <li><a class="dropdown-item" href="/admin/cadastrar"><i class="bi bi-plus-circle"></i> Nova Publicação</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="/perfil"><i class="bi bi-person-gear"></i> Perfil</a></li>
+                                <li><a class="dropdown-item" href="/logout" style="color: #dc3545;"><i class="bi bi-box-arrow-right"></i> Sair</a></li>
+                            </ul>
+                        </li>
+                        {% else %}
+                        <!-- MENU MEMBRO COMUM COM DROPDOWN -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="menuMembro" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: var(--ambar) !important;">
+                                <i class="bi bi-person"></i> {{ session.user_nome }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="menuMembro">
+                                <li><a class="dropdown-item" href="/perfil"><i class="bi bi-person-gear"></i> Perfil</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="/logout" style="color: #dc3545;"><i class="bi bi-box-arrow-right"></i> Sair</a></li>
+                            </ul>
+                        </li>
+                        {% endif %}
+                    {% else %}
+                        <!-- VISITANTE (não logado) -->
+                        <li class="nav-item"><a class="nav-link" href="/"><i class="bi bi-house"></i> Início</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/agenda"><i class="bi bi-calendar3"></i> Agenda</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/login"><i class="bi bi-lock"></i> Membros</a></li>
+                    {% endif %}
                 </ul>
             </div>
         </div>

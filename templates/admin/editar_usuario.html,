@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Usuário - TUPBAO{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <h2 class="titulo-secao"><i class="bi bi-pencil-square"></i> Editar Usuário</h2>
+    <hr class="linha-ambar-left">
+
+    <div class="card shadow">
+        <div class="card-body p-4">
+            <form method="POST">
+                <div class="mb-3">
+                    <label class="form-label"><i class="bi bi-person"></i> Nome</label>
+                    <input type="text" name="nome" class="form-control" value="{{ usuario.nome }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label"><i class="bi bi-envelope"></i> E-mail</label>
+                    <input type="email" class="form-control" value="{{ usuario.email }}" disabled>
+                    <small class="text-muted">O e-mail não pode ser alterado.</small>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label"><i class="bi bi-key"></i> Nova Senha (opcional)</label>
+                    <input type="password" name="nova_senha" class="form-control" placeholder="Deixe em branco para não alterar">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label"><i class="bi bi-shield"></i> Função</label>
+                    <select name="funcao" class="form-select" required>
+                        <option value="membro" {% if usuario.funcao == 'membro' %}selected{% endif %}>👤 Membro</option>
+                        <option value="admin" {% if usuario.funcao == 'admin' %}selected{% endif %}>🔧 Admin</option>
+                        <option value="tesouraria" {% if usuario.funcao == 'tesouraria' %}selected{% endif %}>💰 Tesouraria</option>
+                        <option value="limpezas" {% if usuario.funcao == 'limpezas' %}selected{% endif %}>🧹 Limpezas</option>
+                        <option value="super_admin" {% if usuario.funcao == 'super_admin' %}selected{% endif %}>⭐ Super Admin</option>
+                    </select>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-ambar"><i class="bi bi-check-lg"></i> Salvar</button>
+                    <a href="/admin/usuarios" class="btn btn-outline-secondary">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

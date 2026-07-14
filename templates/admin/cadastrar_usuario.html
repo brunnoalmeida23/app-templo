@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Novo Usuário - TUPBAO{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <h2 class="titulo-secao"><i class="bi bi-person-plus"></i> Novo Usuário</h2>
+    <hr class="linha-ambar-left">
+
+    <div class="card shadow">
+        <div class="card-body p-4">
+            <form method="POST">
+                <div class="mb-3">
+                    <label class="form-label"><i class="bi bi-person"></i> Nome</label>
+                    <input type="text" name="nome" class="form-control" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label"><i class="bi bi-envelope"></i> E-mail</label>
+                    <input type="email" name="email" class="form-control" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label"><i class="bi bi-key"></i> Senha</label>
+                    <input type="password" name="senha" class="form-control" required placeholder="Mínimo 6 caracteres">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label"><i class="bi bi-shield"></i> Função</label>
+                    <select name="funcao" class="form-select" required>
+                        <option value="membro">👤 Membro (visualização)</option>
+                        <option value="admin">🔧 Admin (gerencia tudo)</option>
+                        <option value="tesouraria">💰 Tesouraria (só financeiro)</option>
+                        <option value="limpezas">🧹 Limpezas (só limpezas)</option>
+                        <option value="super_admin">⭐ Super Admin (tudo + usuários)</option>
+                    </select>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-ambar"><i class="bi bi-check-lg"></i> Cadastrar</button>
+                    <a href="/admin/usuarios" class="btn btn-outline-secondary">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -14,12 +14,24 @@
                     <label class="form-label"><i class="bi bi-tag"></i> Tipo de Publicação</label>
                     <select name="tipo" class="form-select" required>
                         <option value="">Selecione...</option>
+                        {% if 'gira' in tipos_disponiveis %}
                         <option value="gira">🕯️ Gira</option>
+                        {% endif %}
+                        {% if 'aviso' in tipos_disponiveis %}
                         <option value="aviso">📢 Aviso</option>
+                        {% endif %}
+                        {% if 'projeto' in tipos_disponiveis %}
                         <option value="projeto">🤲 Projeto Social</option>
+                        {% endif %}
+                        {% if 'limpeza' in tipos_disponiveis %}
                         <option value="limpeza">🧹 Limpeza</option>
+                        {% endif %}
+                        {% if 'financeiro' in tipos_disponiveis %}
                         <option value="financeiro">💰 Financeiro</option>
+                        {% endif %}
+                        {% if 'noticia' in tipos_disponiveis %}
                         <option value="noticia">📰 Notícia</option>
+                        {% endif %}
                     </select>
                 </div>
 
@@ -29,7 +41,7 @@
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label"><i class="bi bi-clock"></i> Data do Evento (opcional — para giras, limpezas, projetos)</label>
+                    <label class="form-label"><i class="bi bi-clock"></i> Data do Evento (opcional)</label>
                     <input type="datetime-local" name="data_evento" class="form-control">
                     <small class="text-muted">Deixe em branco se for apenas um aviso ou informação.</small>
                 </div>

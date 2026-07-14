@@ -19,7 +19,7 @@ class Usuario(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     senha = db.Column(db.String(200), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
-    funcao = db.Column(db.String(50), default='membro')  # 'super_admin', 'admin', 'tesouraria', 'limpezas', 'membro'
+    funcao = db.Column(db.String(50), default='membro')
     ultimo_acesso = db.Column(db.DateTime, nullable=True)
 
 class Publicacao(db.Model):
@@ -33,27 +33,18 @@ class Publicacao(db.Model):
 # ============ FUNÇÕES AUXILIARES ============
 
 def pode_gerenciar(tipo=None):
-    """Verifica se o usuário logado pode gerenciar determinado tipo de conteúdo"""
     if 'user_id' not in session:
         return False
     funcao = session.get('funcao', 'membro')
-    
-    # Super admin e admin podem tudo
     if funcao in ['super_admin', 'admin']:
         return True
-    
-    # Tesouraria só pode financeiro
     if funcao == 'tesouraria' and tipo == 'financeiro':
         return True
-    
-    # Limpezas só pode limpeza
     if funcao == 'limpezas' and tipo == 'limpeza':
         return True
-    
     return False
 
 def pode_gerenciar_usuarios():
-    """Só super_admin pode gerenciar usuários"""
     return session.get('funcao') == 'super_admin'
 
 # ============ ROTAS PÚBLICAS ============
@@ -103,15 +94,12 @@ def logout():
 def dashboard():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
     user = Usuario.query.get(session['user_id'])
-    
     if user.ultimo_acesso:
         novos_avisos = Publicacao.query.filter_by(tipo='aviso')\
             .filter(Publicacao.data_publicacao > user.ultimo_acesso).count()
     else:
         novos_avisos = Publicacao.query.filter_by(tipo='aviso').count()
-    
     avisos = Publicacao.query.filter_by(tipo='aviso').order_by(Publicacao.data_publicacao.desc()).all()
     return render_template('area_membros/dashboard.html', avisos=avisos, novos_avisos=novos_avisos)
 
@@ -138,15 +126,12 @@ def admin():
     if not pode_gerenciar():
         flash('Acesso restrito.')
         return redirect(url_for('dashboard'))
-    
-    # Filtra publicações conforme a função
     if session.get('funcao') == 'tesouraria':
         publicacoes = Publicacao.query.filter_by(tipo='financeiro').order_by(Publicacao.data_publicacao.desc()).all()
     elif session.get('funcao') == 'limpezas':
         publicacoes = Publicacao.query.filter_by(tipo='limpeza').order_by(Publicacao.data_publicacao.desc()).all()
     else:
         publicacoes = Publicacao.query.order_by(Publicacao.data_publicacao.desc()).all()
-    
     return render_template('admin/painel.html', publicacoes=publicacoes)
 
 @app.route('/admin/cadastrar', methods=['GET', 'POST'])
@@ -156,17 +141,13 @@ def cadastrar_publicacao():
     if not pode_gerenciar():
         flash('Acesso restrito.')
         return redirect(url_for('dashboard'))
-    
     if request.method == 'POST':
         titulo = request.form['titulo']
         conteudo = request.form['conteudo']
         tipo = request.form['tipo']
-        
-        # Verificar permissão para o tipo específico
         if not pode_gerenciar(tipo):
             flash('Você não tem permissão para este tipo de publicação.')
             return redirect(url_for('admin'))
-        
         data_evento_str = request.form.get('data_evento', '')
         data_evento = None
         if data_evento_str:
@@ -174,7 +155,6 @@ def cadastrar_publicacao():
                 data_evento = datetime.strptime(data_evento_str, '%Y-%m-%dT%H:%M')
             except:
                 pass
-        
         nova = Publicacao(
             titulo=titulo,
             conteudo=conteudo,
@@ -185,8 +165,6 @@ def cadastrar_publicacao():
         db.session.commit()
         flash(f'✅ {tipo.capitalize()} cadastrado(a) com sucesso!')
         return redirect(url_for('admin'))
-    
-    # Filtrar tipos disponíveis conforme a função
     funcao = session.get('funcao', 'membro')
     tipos_disponiveis = []
     if funcao in ['super_admin', 'admin']:
@@ -195,31 +173,24 @@ def cadastrar_publicacao():
         tipos_disponiveis = ['financeiro']
     elif funcao == 'limpezas':
         tipos_disponiveis = ['limpeza']
-    
     return render_template('admin/cadastrar.html', tipos_disponiveis=tipos_disponiveis)
 
 @app.route('/admin/editar/<int:id>', methods=['GET', 'POST'])
 def editar_publicacao(id):
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
     pub = Publicacao.query.get_or_404(id)
-    
     if not pode_gerenciar(pub.tipo):
         flash('Acesso restrito.')
         return redirect(url_for('dashboard'))
-    
     if request.method == 'POST':
         pub.titulo = request.form['titulo']
         pub.conteudo = request.form['conteudo']
         novo_tipo = request.form['tipo']
-        
         if not pode_gerenciar(novo_tipo):
             flash('Você não tem permissão para este tipo.')
             return redirect(url_for('admin'))
-        
         pub.tipo = novo_tipo
-        
         data_evento_str = request.form.get('data_evento', '')
         if data_evento_str:
             try:
@@ -228,37 +199,31 @@ def editar_publicacao(id):
                 pub.data_evento = None
         else:
             pub.data_evento = None
-        
         db.session.commit()
         flash('✅ Publicação atualizada com sucesso!')
         return redirect(url_for('admin'))
-    
     return render_template('admin/editar.html', pub=pub)
 
 @app.route('/admin/excluir/<int:id>')
 def excluir_publicacao(id):
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
     pub = Publicacao.query.get_or_404(id)
-    
     if not pode_gerenciar(pub.tipo):
         flash('Acesso restrito.')
         return redirect(url_for('dashboard'))
-    
     db.session.delete(pub)
     db.session.commit()
     flash('🗑️ Publicação excluída.')
     return redirect(url_for('admin'))
 
-# ============ GERENCIAR USUÁRIOS (SUPER ADMIN) ============
+# ============ GERENCIAR USUÁRIOS ============
 
 @app.route('/admin/usuarios')
 def gerenciar_usuarios():
     if not pode_gerenciar_usuarios():
         flash('Acesso restrito ao Dirigente.')
         return redirect(url_for('dashboard'))
-    
     usuarios = Usuario.query.all()
     return render_template('admin/usuarios.html', usuarios=usuarios)
 
@@ -267,13 +232,11 @@ def cadastrar_usuario():
     if not pode_gerenciar_usuarios():
         flash('Acesso restrito ao Dirigente.')
         return redirect(url_for('dashboard'))
-    
     if request.method == 'POST':
         nome = request.form['nome']
         email = request.form['email']
         senha = request.form['senha']
         funcao = request.form['funcao']
-        
         if Usuario.query.filter_by(email=email).first():
             flash('E-mail já cadastrado.')
         else:
@@ -288,7 +251,6 @@ def cadastrar_usuario():
             db.session.commit()
             flash(f'✅ Usuário {nome} cadastrado como {funcao}!')
             return redirect(url_for('gerenciar_usuarios'))
-    
     return render_template('admin/cadastrar_usuario.html')
 
 @app.route('/admin/usuarios/editar/<int:id>', methods=['GET', 'POST'])
@@ -296,21 +258,16 @@ def editar_usuario(id):
     if not pode_gerenciar_usuarios():
         flash('Acesso restrito ao Dirigente.')
         return redirect(url_for('dashboard'))
-    
     user = Usuario.query.get_or_404(id)
-    
     if request.method == 'POST':
         user.nome = request.form['nome']
         user.funcao = request.form['funcao']
         user.is_admin = (request.form['funcao'] in ['super_admin', 'admin'])
-        
         if request.form.get('nova_senha'):
             user.senha = generate_password_hash(request.form['nova_senha'])
-        
         db.session.commit()
         flash('✅ Usuário atualizado!')
         return redirect(url_for('gerenciar_usuarios'))
-    
     return render_template('admin/editar_usuario.html', usuario=user)
 
 @app.route('/admin/usuarios/excluir/<int:id>')
@@ -318,7 +275,6 @@ def excluir_usuario(id):
     if not pode_gerenciar_usuarios():
         flash('Acesso restrito ao Dirigente.')
         return redirect(url_for('dashboard'))
-    
     user = Usuario.query.get_or_404(id)
     if user.email == 'admin@templo.com':
         flash('Não é possível excluir o admin principal.')
@@ -326,21 +282,17 @@ def excluir_usuario(id):
         db.session.delete(user)
         db.session.commit()
         flash('🗑️ Usuário excluído.')
-    
     return redirect(url_for('gerenciar_usuarios'))
 
 @app.route('/perfil', methods=['GET', 'POST'])
 def perfil():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
     user = Usuario.query.get(session['user_id'])
-    
     if request.method == 'POST':
         senha_atual = request.form['senha_atual']
         nova_senha = request.form['nova_senha']
         confirmar_senha = request.form['confirmar_senha']
-        
         if not check_password_hash(user.senha, senha_atual):
             flash('Senha atual incorreta.')
         elif nova_senha != confirmar_senha:
@@ -352,8 +304,19 @@ def perfil():
             db.session.commit()
             flash('✅ Senha alterada com sucesso!')
             return redirect(url_for('dashboard'))
-    
     return render_template('perfil.html')
+
+# ============ ROTA TEMPORÁRIA - RESETAR BANCO ============
+
+@app.route('/resetar-banco')
+def resetar_banco():
+    try:
+        db.drop_all()
+        db.create_all()
+        criar_admin_inicial()
+        return '✅ Banco resetado com sucesso! Agora pode fazer login com admin@templo.com / mudar123'
+    except Exception as e:
+        return f'Erro: {e}'
 
 # ============ INICIALIZAÇÃO ============
 

@@ -7,6 +7,14 @@
     <h2 class="titulo-secao"><i class="bi bi-speedometer2"></i> Painel do Membro</h2>
     <hr class="linha-ambar-left">
 
+    <!-- Alerta de novos avisos -->
+    {% if novos_avisos > 0 %}
+    <div class="alert alert-warning alert-dismissible fade show mt-3" role="alert" style="border-left: 4px solid var(--ambar); background-color: #fff8e1;">
+        <i class="bi bi-bell-fill"></i> <strong>{{ novos_avisos }} novo(s) aviso(s)</strong> desde seu último acesso!
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endif %}
+
     <!-- Cards de acesso rápido -->
     <div class="row mt-4">
         <div class="col-lg-4 col-md-6 mb-3">

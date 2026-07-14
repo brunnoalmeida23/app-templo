@@ -19,12 +19,13 @@ class Usuario(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     senha = db.Column(db.String(200), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
+    ultimo_acesso = db.Column(db.DateTime, nullable=True)
 
 class Publicacao(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     titulo = db.Column(db.String(200), nullable=False)
     conteudo = db.Column(db.Text, nullable=False)
-    tipo = db.Column(db.String(50))  # 'gira', 'projeto', 'noticia', 'aviso', 'limpeza', 'financeiro'
+    tipo = db.Column(db.String(50))
     data_evento = db.Column(db.DateTime, nullable=True)
     data_publicacao = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -56,6 +57,9 @@ def login():
             session['user_id'] = user.id
             session['user_nome'] = user.nome
             session['is_admin'] = user.is_admin
+            # Registrar data do último acesso
+            user.ultimo_acesso = datetime.utcnow()
+            db.session.commit()
             flash('Login realizado com sucesso!')
             return redirect(url_for('dashboard'))
         flash('E-mail ou senha inválidos.')
@@ -72,8 +76,18 @@ def logout():
 def dashboard():
     if 'user_id' not in session:
         return redirect(url_for('login'))
+    
+    user = Usuario.query.get(session['user_id'])
+    
+    # Contar avisos novos desde o último acesso
+    if user.ultimo_acesso:
+        novos_avisos = Publicacao.query.filter_by(tipo='aviso')\
+            .filter(Publicacao.data_publicacao > user.ultimo_acesso).count()
+    else:
+        novos_avisos = Publicacao.query.filter_by(tipo='aviso').count()
+    
     avisos = Publicacao.query.filter_by(tipo='aviso').order_by(Publicacao.data_publicacao.desc()).all()
-    return render_template('area_membros/dashboard.html', avisos=avisos)
+    return render_template('area_membros/dashboard.html', avisos=avisos, novos_avisos=novos_avisos)
 
 @app.route('/dashboard/limpezas')
 def ver_limpezas():

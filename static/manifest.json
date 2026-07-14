@@ -4,7 +4,7 @@
     "description": "Aplicativo do Templo de Umbanda Pai Benedito das Almas e Obaluaê",
     "start_url": "/",
     "display": "standalone",
-    "background_color": "#4A1942",
+    "background_color": "#F5F0EB",
     "theme_color": "#4A1942",
     "orientation": "portrait-primary",
     "icons": [

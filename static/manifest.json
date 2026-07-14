@@ -4,21 +4,21 @@
     "description": "Aplicativo do Templo de Umbanda Pai Benedito das Almas e Obaluaê",
     "start_url": "/",
     "display": "standalone",
-    "background_color": "#F5F0EB",
+    "background_color": "#4A1942",
     "theme_color": "#4A1942",
     "orientation": "portrait-primary",
     "icons": [
         {
-            "src": "https://res.cloudinary.com/defafu3v2/images/c_scale,w_448,h_318,dpr_2/f_auto,q_auto/v100/tupbao.com.br/wp-content/themes/tupbao-theme/assets/images/logo-tupbao/logo-tupbao.png?_i=AA",
+            "src": "/static/web-app-manifest-192x192.png",
             "sizes": "192x192",
             "type": "image/png",
-            "purpose": "any maskable"
+            "purpose": "maskable"
         },
         {
-            "src": "https://res.cloudinary.com/defafu3v2/images/c_scale,w_448,h_318,dpr_2/f_auto,q_auto/v100/tupbao.com.br/wp-content/themes/tupbao-theme/assets/images/logo-tupbao/logo-tupbao.png?_i=AA",
+            "src": "/static/web-app-manifest-512x512.png",
             "sizes": "512x512",
             "type": "image/png",
-            "purpose": "any maskable"
+            "purpose": "maskable"
         }
     ]
 }

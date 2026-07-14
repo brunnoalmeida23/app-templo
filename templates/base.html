@@ -10,8 +10,9 @@
     <meta name="apple-mobile-web-app-title" content="TUPBAO">
     <meta name="theme-color" content="#4A1942">
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
-    <link rel="apple-touch-icon" href="https://res.cloudinary.com/defafu3v2/images/c_scale,w_448,h_318,dpr_2/f_auto,q_auto/v100/tupbao.com.br/wp-content/themes/tupbao-theme/assets/images/logo-tupbao/logo-tupbao.png?_i=AA">
-    <link rel="icon" type="image/png" href="https://res.cloudinary.com/defafu3v2/images/c_scale,w_448,h_318,dpr_2/f_auto,q_auto/v100/tupbao.com.br/wp-content/themes/tupbao-theme/assets/images/logo-tupbao/logo-tupbao.png?_i=AA">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon-96x96.png') }}" sizes="96x96">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
     
     <title>{% block title %}TUPBAO{% endblock %}</title>
     
@@ -78,7 +79,7 @@
         </div>
     </nav>
 
-      <!-- ============ CONTEÚDO PRINCIPAL ============ -->
+    <!-- ============ CONTEÚDO PRINCIPAL ============ -->
     <main>
         {% if session.user_id and request.path != '/dashboard' %}
         <div class="container mt-3">

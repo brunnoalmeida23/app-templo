@@ -406,6 +406,18 @@ def perfil():
             return redirect(url_for('dashboard'))
     return render_template('perfil.html')
 
+# ============ ROTA TEMPORÁRIA ============
+
+@app.route('/resetar-banco')
+def resetar_banco():
+    try:
+        db.drop_all()
+        db.create_all()
+        criar_admin_inicial()
+        return '✅ Banco resetado! Faça login com admin@templo.com / mudar123'
+    except Exception as e:
+        return f'Erro: {e}'
+
 # ============ INICIALIZAÇÃO ============
 
 def criar_admin_inicial():

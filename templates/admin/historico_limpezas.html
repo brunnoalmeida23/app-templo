@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Histórico de Limpezas - TUPBAO{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="titulo-secao"><i class="bi bi-bucket"></i> Histórico de Limpezas</h2>
+    <hr class="linha-ambar-left">
+
+    {% if historico %}
+    <div class="table-responsive">
+        <table class="table table-hover bg-white shadow-sm rounded">
+            <thead style="background-color: var(--roxo); color: white;">
+                <tr>
+                    <th>Data</th>
+                    <th>Grupo</th>
+                    <th>Confirmado por</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for h in historico %}
+                <tr>
+                    <td>{{ h.data_checkin.strftime('%d/%m/%Y às %H:%M') }}</td>
+                    <td><strong>{{ h.grupo }}</strong></td>
+                    <td>{{ h.usuario_nome }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p>Nenhuma limpeza confirmada ainda.</p>
+    {% endif %}
+</div>
+{% endblock %}

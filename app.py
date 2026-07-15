@@ -28,6 +28,13 @@ class AvisoLido(db.Model):
     publicacao_id = db.Column(db.Integer, db.ForeignKey('publicacao.id'), nullable=False)
     data_leitura = db.Column(db.DateTime, default=datetime.utcnow)
 
+class CheckinLimpeza(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False)
+    usuario_nome = db.Column(db.String(100), nullable=False)
+    grupo = db.Column(db.String(50), nullable=False)
+    data_checkin = db.Column(db.DateTime, default=datetime.utcnow)
+
 class Publicacao(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     titulo = db.Column(db.String(200), nullable=False)
@@ -144,6 +151,38 @@ def ver_financeiro():
         return redirect(url_for('login'))
     financeiro = Publicacao.query.filter_by(tipo='financeiro').order_by(Publicacao.data_publicacao.desc()).all()
     return render_template('area_membros/financeiro.html', financeiro=financeiro)
+
+# ============ CHECK-IN LIMPEZA ============
+
+@app.route('/checkin/limpeza', methods=['GET', 'POST'])
+def checkin_limpeza():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    grupos = ['Grupo 1', 'Grupo 2', 'Grupo 3', 'Grupo 4', 'Grupo 5', 'Grupo 6']
+    
+    if request.method == 'POST':
+        grupo = request.form['grupo']
+        checkin = CheckinLimpeza(
+            usuario_id=session['user_id'],
+            usuario_nome=session['user_nome'],
+            grupo=grupo
+        )
+        db.session.add(checkin)
+        db.session.commit()
+        flash(f'✅ Limpeza do {grupo} confirmada! Axé!')
+        return redirect(url_for('dashboard'))
+    
+    return render_template('checkin_limpeza.html', grupos=grupos)
+
+@app.route('/admin/limpezas/historico')
+def historico_limpezas():
+    if 'user_id' not in session or not pode_gerenciar():
+        flash('Acesso restrito.')
+        return redirect(url_for('dashboard'))
+    
+    historico = CheckinLimpeza.query.order_by(CheckinLimpeza.data_checkin.desc()).limit(50).all()
+    return render_template('admin/historico_limpezas.html', historico=historico)
 
 # ============ ADMIN ============
 

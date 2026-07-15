@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Check-in Limpeza - TUPBAO{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <h2 class="titulo-secao text-center"><i class="bi bi-bucket"></i> Confirmar Limpeza</h2>
+            <hr class="linha-ambar">
+
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-success text-center">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="card shadow">
+                <div class="card-body p-4">
+                    <p class="text-center mb-3"><strong>{{ session.user_nome }}</strong>, selecione seu grupo:</p>
+                    <form method="POST">
+                        {% for grupo in grupos %}
+                        <div class="form-check mb-2 p-3 border rounded">
+                            <input class="form-check-input" type="radio" name="grupo" id="{{ grupo }}" value="{{ grupo }}" required>
+                            <label class="form-check-label w-100" for="{{ grupo }}">
+                                <strong>{{ grupo }}</strong>
+                            </label>
+                        </div>
+                        {% endfor %}
+                        <button type="submit" class="btn btn-ambar w-100 mt-3"><i class="bi bi-check-lg"></i> Confirmar Limpeza</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="text-center mt-3">
+                <a href="/dashboard" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

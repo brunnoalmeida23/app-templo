@@ -93,6 +93,10 @@ def login():
             user.ultimo_acesso = datetime.utcnow()
             db.session.commit()
             flash('Login realizado com sucesso!')
+            # Redirecionar para a página que o usuário tentou acessar
+            next_page = session.pop('next_page', None)
+            if next_page:
+                return redirect(next_page)
             return redirect(url_for('dashboard'))
         flash('E-mail ou senha inválidos.')
     return render_template('login.html')
@@ -157,6 +161,7 @@ def ver_financeiro():
 @app.route('/checkin/limpeza', methods=['GET', 'POST'])
 def checkin_limpeza():
     if 'user_id' not in session:
+        session['next_page'] = '/checkin/limpeza'
         return redirect(url_for('login'))
     
     grupos = ['Grupo 1', 'Grupo 2', 'Grupo 3', 'Grupo 4', 'Grupo 5', 'Grupo 6']

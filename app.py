@@ -76,6 +76,8 @@ def login():
             session['user_nome'] = user.nome
             session['is_admin'] = user.is_admin
             session['funcao'] = user.funcao
+            # Guardar o último acesso ANTES de atualizar
+            session['ultimo_acesso_anterior'] = user.ultimo_acesso
             user.ultimo_acesso = datetime.utcnow()
             db.session.commit()
             flash('Login realizado com sucesso!')
@@ -94,12 +96,17 @@ def logout():
 def dashboard():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    user = Usuario.query.get(session['user_id'])
-    if user.ultimo_acesso:
+    
+    # Usar o último acesso ANTERIOR (antes do login atual)
+    ultimo_acesso_anterior = session.get('ultimo_acesso_anterior')
+    
+    if ultimo_acesso_anterior:
         novos_avisos = Publicacao.query.filter_by(tipo='aviso')\
-            .filter(Publicacao.data_publicacao > user.ultimo_acesso).count()
+            .filter(Publicacao.data_publicacao > ultimo_acesso_anterior).count()
     else:
+        # Primeiro acesso: todos os avisos são novos
         novos_avisos = Publicacao.query.filter_by(tipo='aviso').count()
+    
     avisos = Publicacao.query.filter_by(tipo='aviso').order_by(Publicacao.data_publicacao.desc()).all()
     return render_template('area_membros/dashboard.html', avisos=avisos, novos_avisos=novos_avisos)
 

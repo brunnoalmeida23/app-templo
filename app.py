@@ -22,6 +22,12 @@ class Usuario(db.Model):
     funcao = db.Column(db.String(50), default='membro')
     ultimo_acesso = db.Column(db.DateTime, nullable=True)
 
+class AvisoLido(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False)
+    publicacao_id = db.Column(db.Integer, db.ForeignKey('publicacao.id'), nullable=False)
+    data_leitura = db.Column(db.DateTime, default=datetime.utcnow)
+
 class Publicacao(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     titulo = db.Column(db.String(200), nullable=False)
@@ -76,7 +82,6 @@ def login():
             session['user_nome'] = user.nome
             session['is_admin'] = user.is_admin
             session['funcao'] = user.funcao
-            # Guardar o último acesso ANTES de atualizar
             session['ultimo_acesso_anterior'] = user.ultimo_acesso
             user.ultimo_acesso = datetime.utcnow()
             db.session.commit()
@@ -97,18 +102,34 @@ def dashboard():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
-    # Usar o último acesso ANTERIOR (antes do login atual)
     ultimo_acesso_anterior = session.get('ultimo_acesso_anterior')
     
     if ultimo_acesso_anterior:
         novos_avisos = Publicacao.query.filter_by(tipo='aviso')\
             .filter(Publicacao.data_publicacao > ultimo_acesso_anterior).count()
     else:
-        # Primeiro acesso: todos os avisos são novos
         novos_avisos = Publicacao.query.filter_by(tipo='aviso').count()
     
     avisos = Publicacao.query.filter_by(tipo='aviso').order_by(Publicacao.data_publicacao.desc()).all()
     return render_template('area_membros/dashboard.html', avisos=avisos, novos_avisos=novos_avisos)
+
+@app.route('/dashboard/avisos')
+def ver_avisos():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    avisos = Publicacao.query.filter_by(tipo='aviso').order_by(Publicacao.data_publicacao.desc()).all()
+    lidos = [al.publicacao_id for al in AvisoLido.query.filter_by(usuario_id=session['user_id']).all()]
+    return render_template('area_membros/avisos.html', avisos=avisos, lidos=lidos)
+
+@app.route('/dashboard/avisos/marcar-lido/<int:id>')
+def marcar_lido(id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    if not AvisoLido.query.filter_by(usuario_id=session['user_id'], publicacao_id=id).first():
+        novo = AvisoLido(usuario_id=session['user_id'], publicacao_id=id)
+        db.session.add(novo)
+        db.session.commit()
+    return redirect(url_for('ver_avisos'))
 
 @app.route('/dashboard/limpezas')
 def ver_limpezas():

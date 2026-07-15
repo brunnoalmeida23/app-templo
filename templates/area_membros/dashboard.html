@@ -7,6 +7,18 @@
     <h2 class="titulo-secao"><i class="bi bi-speedometer2"></i> Painel do Membro</h2>
     <hr class="linha-ambar-left">
 
+    <!-- Mensagens flash flutuantes -->
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-success alert-dismissible fade show" role="alert" style="position: fixed; top: 70px; right: 20px; z-index: 9999; max-width: 350px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); border-left: 4px solid #28a745;">
+                    <i class="bi bi-check-circle-fill"></i> {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
     <!-- Alerta de novos avisos -->
     {% if novos_avisos > 0 %}
     <div class="alert alert-warning alert-dismissible fade show mt-3" role="alert" style="border-left: 4px solid var(--ambar); background-color: #fff8e1;">

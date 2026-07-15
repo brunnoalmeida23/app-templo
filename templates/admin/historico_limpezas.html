@@ -4,32 +4,62 @@
 
 {% block content %}
 <div class="container mt-5">
-    <h2 class="titulo-secao"><i class="bi bi-bucket"></i> Histórico de Limpezas</h2>
+    <h2 class="titulo-secao"><i class="bi bi-list-check"></i> Histórico de Limpezas</h2>
     <hr class="linha-ambar-left">
 
-    {% if historico %}
-    <div class="table-responsive">
-        <table class="table table-hover bg-white shadow-sm rounded">
-            <thead style="background-color: var(--roxo); color: white;">
-                <tr>
-                    <th>Data</th>
-                    <th>Grupo</th>
-                    <th>Confirmado por</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for h in historico %}
-                <tr>
-                    <td>{{ h.data_checkin.strftime('%d/%m/%Y às %H:%M') }}</td>
-                    <td><strong>{{ h.grupo }}</strong></td>
-                    <td>{{ h.usuario_nome }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    {% if periodos %}
+        {% for periodo, checkins in periodos.items() %}
+        <div class="card shadow-sm mb-4">
+            <div class="card-header" style="background-color: var(--roxo); color: white;">
+                <strong><i class="bi bi-calendar-range"></i> {{ periodo }}</strong>
+                <span class="badge bg-light text-dark ms-2">{{ checkins|length }} confirmação(ões)</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Data/Hora</th>
+                                <th>Grupo</th>
+                                <th>Confirmado por</th>
+                                <th style="width: 60px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for c in checkins %}
+                            <tr>
+                                <td>{{ c.data_checkin.strftime('%d/%m/%Y às %H:%M') }}</td>
+                                <td><strong>{{ c.grupo }}</strong></td>
+                                <td>{{ c.usuario_nome }}</td>
+                                <td>
+                                    <a href="/admin/limpezas/excluir/{{ c.id }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Excluir este check-in?')" title="Excluir">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
     {% else %}
-    <p>Nenhuma limpeza confirmada ainda.</p>
+        <div class="text-center py-4 bg-white rounded shadow-sm">
+            <i class="bi bi-bucket" style="font-size: 3rem; color: var(--roxo);"></i>
+            <p class="lead mt-3">Nenhuma limpeza confirmada ainda.</p>
+        </div>
     {% endif %}
 </div>
 {% endblock %}

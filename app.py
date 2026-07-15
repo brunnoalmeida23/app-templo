@@ -33,6 +33,7 @@ class CheckinLimpeza(db.Model):
     usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False)
     usuario_nome = db.Column(db.String(100), nullable=False)
     grupo = db.Column(db.String(50), nullable=False)
+    periodo = db.Column(db.String(50), nullable=True)
     data_checkin = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Publicacao(db.Model):
@@ -93,7 +94,6 @@ def login():
             user.ultimo_acesso = datetime.utcnow()
             db.session.commit()
             flash('Login realizado com sucesso!')
-            # Redirecionar para a página que o usuário tentou acessar
             next_page = session.pop('next_page', None)
             if next_page:
                 return redirect(next_page)
@@ -164,21 +164,41 @@ def checkin_limpeza():
         session['next_page'] = '/checkin/limpeza'
         return redirect(url_for('login'))
     
-    grupos = ['Grupo 1', 'Grupo 2', 'Grupo 3', 'Grupo 4', 'Grupo 5', 'Grupo 6']
+    grupos = [
+        {'nome': 'Grupo 1', 'periodo': '29/06 a 04/07'},
+        {'nome': 'Grupo 2', 'periodo': '22/06 a 27/06'},
+        {'nome': 'Grupo 3', 'periodo': '06/07 a 11/07'},
+        {'nome': 'Grupo 4', 'periodo': '13/07 a 18/07'},
+        {'nome': 'Grupo 5', 'periodo': '20/07 a 25/07'},
+        {'nome': 'Grupo 6', 'periodo': '27/07 a 01/08'},
+    ]
     
     if request.method == 'POST':
-        grupo = request.form['grupo']
+        grupo_nome = request.form['grupo']
+        grupo_periodo = request.form['periodo']
         checkin = CheckinLimpeza(
             usuario_id=session['user_id'],
             usuario_nome=session['user_nome'],
-            grupo=grupo
+            grupo=grupo_nome,
+            periodo=grupo_periodo
         )
         db.session.add(checkin)
         db.session.commit()
-        flash(f'✅ Limpeza do {grupo} confirmada! Axé!')
+        flash(f'✅ Limpeza do {grupo_nome} confirmada! Axé!')
         return redirect(url_for('dashboard'))
     
     return render_template('checkin_limpeza.html', grupos=grupos)
+
+@app.route('/admin/limpezas/excluir/<int:id>')
+def excluir_checkin(id):
+    if 'user_id' not in session or not pode_gerenciar():
+        flash('Acesso restrito.')
+        return redirect(url_for('dashboard'))
+    checkin = CheckinLimpeza.query.get_or_404(id)
+    db.session.delete(checkin)
+    db.session.commit()
+    flash('🗑️ Check-in excluído.')
+    return redirect(url_for('historico_limpezas'))
 
 @app.route('/admin/limpezas/historico')
 def historico_limpezas():
@@ -186,8 +206,16 @@ def historico_limpezas():
         flash('Acesso restrito.')
         return redirect(url_for('dashboard'))
     
-    historico = CheckinLimpeza.query.order_by(CheckinLimpeza.data_checkin.desc()).limit(50).all()
-    return render_template('admin/historico_limpezas.html', historico=historico)
+    checkins = CheckinLimpeza.query.order_by(CheckinLimpeza.periodo.desc(), CheckinLimpeza.data_checkin.desc()).all()
+    
+    periodos = {}
+    for c in checkins:
+        chave = c.periodo if c.periodo else 'Sem período'
+        if chave not in periodos:
+            periodos[chave] = []
+        periodos[chave].append(c)
+    
+    return render_template('admin/historico_limpezas.html', periodos=periodos)
 
 # ============ ADMIN ============
 

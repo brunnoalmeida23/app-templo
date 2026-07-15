@@ -23,9 +23,11 @@
                     <form method="POST">
                         {% for grupo in grupos %}
                         <div class="form-check mb-2 p-3 border rounded">
-                            <input class="form-check-input" type="radio" name="grupo" id="{{ grupo }}" value="{{ grupo }}" required>
-                            <label class="form-check-label w-100" for="{{ grupo }}">
-                                <strong>{{ grupo }}</strong>
+                            <input class="form-check-input" type="radio" name="grupo" id="{{ grupo.nome }}" value="{{ grupo.nome }}" required>
+                            <input type="hidden" name="periodo" value="{{ grupo.periodo }}">
+                            <label class="form-check-label w-100" for="{{ grupo.nome }}">
+                                <strong>{{ grupo.nome }}</strong>
+                                <br><small class="text-muted">📅 {{ grupo.periodo }}</small>
                             </label>
                         </div>
                         {% endfor %}

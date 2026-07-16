@@ -1,3 +1,4 @@
+import requests
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -60,6 +61,24 @@ def pode_gerenciar(tipo=None):
 
 def pode_gerenciar_usuarios():
     return session.get('funcao') == 'super_admin'
+
+def enviar_notificacao(titulo, mensagem):
+    """Envia notificação push via OneSignal"""
+    try:
+        url = "https://onesignal.com/api/v1/notifications"
+        headers = {
+            "Authorization": "Basic os_v2_app_c5lk3msgarb7nccxhhs4jru6ziyuegufbgruqpv62o4rip5bubxxxcmqto3pyuoovlcu6smuhf76rvj2d7gkm3llqatq2kwe7igrf4a",
+            "Content-Type": "application/json"
+        }
+        data = {
+            "app_id": "1756adb2-4604-43f6-8857-39e5c4c69eca",
+            "headings": {"en": titulo},
+            "contents": {"en": mensagem},
+            "included_segments": ["Subscribed Users"]
+        }
+        requests.post(url, json=data, headers=headers)
+    except:
+        pass
 
 # ============ ROTAS PÚBLICAS ============
 
@@ -264,6 +283,9 @@ def cadastrar_publicacao():
         db.session.add(nova)
         db.session.commit()
         flash(f'✅ {tipo.capitalize()} cadastrado(a) com sucesso!')
+        # Enviar notificação push se for aviso
+        if tipo == 'aviso':
+            enviar_notificacao("📢 Novo Aviso - TUPBAO", titulo)
         return redirect(url_for('admin'))
     funcao = session.get('funcao', 'membro')
     tipos_disponiveis = []

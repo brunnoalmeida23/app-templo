@@ -465,5 +465,9 @@ def inicializar_banco():
         criar_admin_inicial()
         _banco_inicializado = True
 
+@app.route('/OneSignalSDKWorker.js')
+def serve_worker():
+    return app.send_static_file('OneSignalSDKWorker.js')
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

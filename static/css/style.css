@@ -1,15 +1,17 @@
 /* ============ CORES DO TEMPLO ============ */
 :root {
-    --roxo: #4A1942;
+    --roxo: #1A1A1A;
     --ambar: #C4922E;
-    --bege: #F5F0EB;
-    --roxo-escuro: #3a1033;
+    --bege: #000000;
+    --roxo-escuro: #0D0D0D;
+    --texto: #FFFFFF;
+    --texto-claro: #CCCCCC;
 }
 
 /* ============ BASE ============ */
 body {
     background-color: var(--bege);
-    color: #333;
+    color: var(--texto);
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     min-height: 100vh;
     display: flex;
@@ -23,7 +25,8 @@ main {
 /* ============ NAVBAR ============ */
 .navbar {
     background-color: var(--roxo) !important;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    border-bottom: 2px solid var(--ambar);
 }
 
 .navbar-brand img {
@@ -42,12 +45,13 @@ main {
 /* ============ RODAPÉ ============ */
 .footer {
     background-color: var(--roxo);
+    border-top: 2px solid var(--ambar);
     margin-top: auto;
 }
 
 /* ============ TÍTULOS ============ */
 .titulo-secao {
-    color: var(--roxo);
+    color: var(--ambar);
     font-weight: 700;
 }
 
@@ -67,36 +71,43 @@ main {
 
 /* ============ CARDS ============ */
 .card {
-    border: none;
+    border: 1px solid #333;
     border-left: 4px solid var(--ambar);
     border-radius: 8px;
     transition: 0.3s;
+    background-color: #1A1A1A;
+    color: var(--texto);
 }
 
 .card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.15) !important;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3) !important;
 }
 
 .card-dash {
-    border: none;
+    border: 1px solid #333;
     border-top: 4px solid var(--ambar);
     transition: 0.3s;
     cursor: pointer;
     text-decoration: none;
-    color: inherit;
+    background-color: #1A1A1A;
+    color: var(--texto);
 }
 
 .card-dash:hover {
     transform: translateY(-3px);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.15) !important;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3) !important;
+}
+
+.card-dash .text-muted {
+    color: var(--texto-claro) !important;
 }
 
 /* ============ BOTÕES ============ */
 .btn-templo {
     background-color: var(--roxo);
     color: #fff;
-    border: none;
+    border: 1px solid var(--ambar);
     padding: 10px 25px;
     border-radius: 6px;
     transition: 0.3s;
@@ -104,55 +115,159 @@ main {
 
 .btn-templo:hover {
     background-color: var(--roxo-escuro);
-    color: #fff;
+    color: var(--ambar);
 }
 
 .btn-ambar {
     background-color: var(--ambar);
-    color: #fff;
+    color: #000;
     border: none;
     padding: 10px 25px;
     border-radius: 6px;
     transition: 0.3s;
+    font-weight: 600;
 }
 
 .btn-ambar:hover {
     background-color: #a87a1e;
+    color: #000;
+}
+
+.btn-outline-secondary {
+    color: var(--texto-claro);
+    border-color: #555;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #333;
     color: #fff;
+}
+
+/* ============ TABELAS ============ */
+.table {
+    color: var(--texto);
+}
+
+.table-hover tbody tr:hover {
+    background-color: #222;
+}
+
+.table thead {
+    background-color: var(--roxo) !important;
+    color: white;
 }
 
 /* ============ LISTA DE GIRAS ============ */
 .list-group-item {
-    border: none;
+    border: 1px solid #333;
     border-left: 4px solid var(--ambar);
     margin-bottom: 15px;
     border-radius: 8px;
+    background-color: #1A1A1A;
+    color: var(--texto);
 }
 
 .data-gira {
-    color: var(--roxo);
+    color: var(--ambar);
     font-weight: bold;
 }
 
 /* ============ AVISOS ============ */
 .aviso-item {
-    background-color: #fff;
-    border-left: 4px solid var(--roxo);
+    background-color: #1A1A1A;
+    border-left: 4px solid var(--ambar);
     padding: 15px;
     margin-bottom: 15px;
     border-radius: 0 8px 8px 0;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    color: var(--texto);
+}
+
+/* ============ ALERTAS ============ */
+.alert-warning {
+    background-color: #2A2000;
+    color: var(--ambar);
+    border-color: var(--ambar);
+}
+
+.alert-success {
+    background-color: #0D2A0D;
+    color: #4CAF50;
+    border-color: #4CAF50;
+}
+
+.alert-info {
+    background-color: #0D1F2A;
+    color: #64B5F6;
+    border-color: #64B5F6;
 }
 
 /* ============ LOGIN ============ */
 .login-card {
-    border: none;
+    border: 1px solid #333;
     border-top: 4px solid var(--ambar);
     border-radius: 10px;
+    background-color: #1A1A1A;
 }
 
 .login-logo {
     height: 70px;
+}
+
+/* ============ FORMULÁRIOS ============ */
+.form-control, .form-select {
+    background-color: #111;
+    border: 1px solid #444;
+    color: var(--texto);
+}
+
+.form-control:focus, .form-select:focus {
+    background-color: #1A1A1A;
+    border-color: var(--ambar);
+    color: var(--texto);
+    box-shadow: 0 0 0 0.2rem rgba(196, 146, 46, 0.25);
+}
+
+.form-check-input {
+    background-color: #333;
+    border-color: #555;
+}
+
+.form-check-input:checked {
+    background-color: var(--ambar);
+    border-color: var(--ambar);
+}
+
+/* ============ DROPDOWN ============ */
+.dropdown-menu {
+    background-color: #1A1A1A;
+    border: 1px solid #333;
+}
+
+.dropdown-item {
+    color: var(--texto);
+}
+
+.dropdown-item:hover {
+    background-color: #333;
+    color: var(--ambar);
+}
+
+.dropdown-divider {
+    border-color: #333;
+}
+
+/* ============ BADGES ============ */
+.badge {
+    font-weight: 500;
+}
+
+.bg-white {
+    background-color: #1A1A1A !important;
+}
+
+.text-muted {
+    color: var(--texto-claro) !important;
 }
 
 /* ============ RESPONSIVO ============ */

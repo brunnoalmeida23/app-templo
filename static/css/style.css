@@ -79,6 +79,15 @@ main {
     color: var(--texto);
 }
 
+.card h5,
+.card p {
+    color: #fff !important;
+}
+
+.card .text-muted {
+    color: #CCC !important;
+}
+
 .card:hover {
     transform: translateY(-3px);
     box-shadow: 0 6px 20px rgba(0,0,0,0.3) !important;
@@ -94,13 +103,19 @@ main {
     color: var(--texto);
 }
 
+.card-dash h5,
+.card-dash p,
+.card-dash .text-dark {
+    color: #fff !important;
+}
+
 .card-dash:hover {
     transform: translateY(-3px);
     box-shadow: 0 6px 20px rgba(0,0,0,0.3) !important;
 }
 
 .card-dash .text-muted {
-    color: var(--texto-claro) !important;
+    color: #CCC !important;
 }
 
 /* ============ BOTÕES ============ */

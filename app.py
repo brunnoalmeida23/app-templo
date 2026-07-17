@@ -81,7 +81,7 @@ def enviar_notificacao(titulo, mensagem):
             "app_id": onesignal_app_id,
             "headings": {"en": titulo},
             "contents": {"en": mensagem},
-            "included_segments": ["Subscribed Users"]
+            "included_segments": ["Active Subscriptions"]
         }
         response = requests.post(url, json=data, headers=headers)
         print(f"DEBUG: OneSignal response: {response.status_code} - {response.text}")

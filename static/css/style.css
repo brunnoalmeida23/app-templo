@@ -1,19 +1,5 @@
-/* ============ VARIÁVEIS - MODO ESCURO (PADRÃO) ============ */
+/* ============ MODO CLARO (PADRÃO) ============ */
 :root {
-    --bg: #000000;
-    --bg-card: #1A1A1A;
-    --bg-input: #111;
-    --texto: #FFFFFF;
-    --texto-claro: #CCCCCC;
-    --roxo: #1A1A1A;
-    --ambar: #C4922E;
-    --destaque: #C4922E;
-    --border: #333;
-    --hover: #222;
-}
-
-/* ============ MODO CLARO ============ */
-[data-theme="light"] {
     --bg: #F9F7F4;
     --bg-card: #FFFFFF;
     --bg-input: #FFFFFF;
@@ -26,11 +12,25 @@
     --hover: #f0ece6;
 }
 
+/* ============ MODO ESCURO ============ */
+[data-theme="dark"] {
+    --bg: #000000;
+    --bg-card: #1A1A1A;
+    --bg-input: #111;
+    --texto: #FFFFFF;
+    --texto-claro: #CCCCCC;
+    --roxo: #1A1A1A;
+    --ambar: #DAA520;
+    --destaque: #DAA520;
+    --border: #333;
+    --hover: #222;
+}
+
 /* ============ BASE ============ */
 body {
     background-color: var(--bg);
     color: var(--texto);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Montserrat', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -88,7 +88,8 @@ main {
 }
 
 /* ============ TÍTULOS ============ */
-.titulo-secao {
+h1, h2, h3, h4, .titulo-secao {
+    font-family: 'Cinzel', 'Cormorant Garamond', serif;
     color: var(--destaque);
     font-weight: 700;
 }
@@ -144,18 +145,21 @@ main {
     border-radius: 6px;
     transition: 0.3s;
 }
-.btn-templo:hover { background-color: var(--destaque); color: #fff; }
+.btn-templo:hover { background-color: #0f2438; color: #fff; }
 
 .btn-ambar {
     background-color: var(--ambar);
-    color: #000;
+    color: #fff;
     border: none;
     padding: 10px 25px;
     border-radius: 6px;
     transition: 0.3s;
     font-weight: 600;
 }
-.btn-ambar:hover { background-color: #b8860b; color: #000; }
+.btn-ambar:hover { background-color: #b8860b; color: #fff; }
+
+[data-theme="light"] .btn-ambar { color: #000; }
+[data-theme="light"] .btn-ambar:hover { color: #000; }
 
 .btn-outline-secondary {
     color: var(--texto-claro);
@@ -200,7 +204,7 @@ main {
     background-color: var(--bg-card);
     border-color: var(--ambar);
     color: var(--texto);
-    box-shadow: 0 0 0 0.2rem rgba(196, 146, 46, 0.25);
+    box-shadow: 0 0 0 0.2rem rgba(218, 165, 32, 0.25);
 }
 .form-check-input { background-color: var(--bg-input); border-color: var(--border); }
 .form-check-input:checked { background-color: var(--ambar); border-color: var(--ambar); }
@@ -224,6 +228,20 @@ main {
 [data-theme="light"] .alert-warning { background-color: #fff8e1; color: #856404; border-color: #ffc107; }
 [data-theme="light"] .alert-success { background-color: #e8f5e9; color: #2e7d32; border-color: #4caf50; }
 [data-theme="light"] .alert-info { background-color: #e3f2fd; color: #1565c0; border-color: #64b5f6; }
+
+/* ============ LOGIN ============ */
+.login-card {
+    border: 1px solid var(--border);
+    border-top: 4px solid var(--ambar);
+    border-radius: 10px;
+    background-color: var(--bg-card);
+}
+
+.login-logo {
+    height: auto;
+    max-height: 80px;
+    max-width: 100%;
+}
 
 /* ============ RESPONSIVO ============ */
 @media (max-width: 768px) {

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-br" data-theme="dark">
+<html lang="pt-br" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="TUPBAO">
-    <meta name="theme-color" content="#1A1A1A">
+    <meta name="theme-color" content="#1a3a52">
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon-96x96.png') }}" sizes="96x96">
     <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
@@ -16,6 +16,8 @@
     
     <title>{% block title %}TUPBAO{% endblock %}</title>
     
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
     <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
@@ -85,11 +87,11 @@
                     {% else %}
                         <li class="nav-item"><a class="nav-link" href="/"><i class="bi bi-house"></i> Início</a></li>
                         <li class="nav-item"><a class="nav-link" href="/agenda"><i class="bi bi-calendar3"></i> Agenda</a></li>
-                        <li class="nav-item"><a class="nav-link" href="/login"><i class="bi bi-lock"></i> Membros</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/login"><i class="bi bi-lock"></i> Portal TupLovers</a></li>
                     {% endif %}
                     <li class="nav-item">
                         <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">
-                            <i class="bi bi-sun-fill" id="themeIcon"></i>
+                            <i class="bi bi-moon-fill" id="themeIcon"></i>
                         </button>
                     </li>
                 </ul>
@@ -121,16 +123,16 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
-        const savedTheme = localStorage.getItem('theme') || 'dark';
+        const savedTheme = localStorage.getItem('theme') || 'light';
         document.documentElement.setAttribute('data-theme', savedTheme);
-        document.getElementById('themeIcon').className = savedTheme === 'light' ? 'bi bi-moon-fill' : 'bi bi-sun-fill';
+        document.getElementById('themeIcon').className = savedTheme === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-fill';
 
         function toggleTheme() {
             const current = document.documentElement.getAttribute('data-theme');
             const next = current === 'light' ? 'dark' : 'light';
             document.documentElement.setAttribute('data-theme', next);
             localStorage.setItem('theme', next);
-            document.getElementById('themeIcon').className = next === 'light' ? 'bi bi-moon-fill' : 'bi bi-sun-fill';
+            document.getElementById('themeIcon').className = next === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-fill';
         }
     </script>
     {% block extra_scripts %}{% endblock %}

@@ -140,15 +140,14 @@ def dashboard():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
-    ultimo_acesso_anterior = session.get('ultimo_acesso_anterior')
-    
-    if ultimo_acesso_anterior:
-        novos_avisos = Publicacao.query.filter_by(tipo='aviso')\
-            .filter(Publicacao.data_publicacao > ultimo_acesso_anterior).count()
-    else:
-        novos_avisos = Publicacao.query.filter_by(tipo='aviso').count()
-    
+    lidos = [al.publicacao_id for al in AvisoLido.query.filter_by(usuario_id=session['user_id']).all()]
     avisos = Publicacao.query.filter_by(tipo='aviso').order_by(Publicacao.data_publicacao.desc()).all()
+    
+    novos_avisos = 0
+    for aviso in avisos:
+        if aviso.id not in lidos:
+            novos_avisos += 1
+    
     return render_template('area_membros/dashboard.html', avisos=avisos, novos_avisos=novos_avisos)
 
 @app.route('/dashboard/avisos')

@@ -74,7 +74,7 @@ def enviar_notificacao(titulo, mensagem):
             return
         url = "https://onesignal.com/api/v1/notifications"
         headers = {
-            "Authorization": f"Basic {onesignal_api_key}",
+            "Authorization": f"Bearer {onesignal_api_key}",
             "Content-Type": "application/json"
         }
         data = {

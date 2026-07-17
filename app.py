@@ -63,15 +63,19 @@ def pode_gerenciar_usuarios():
     return session.get('funcao') == 'super_admin'
 
 def enviar_notificacao(titulo, mensagem):
-    """Envia notificação push via OneSignal"""
+    """Envia notificação push via OneSignal usando variáveis de ambiente"""
     try:
+        onesignal_app_id = os.environ.get('ONESIGNAL_APP_ID', '')
+        onesignal_api_key = os.environ.get('ONESIGNAL_API_KEY', '')
+        if not onesignal_app_id or not onesignal_api_key:
+            return
         url = "https://onesignal.com/api/v1/notifications"
         headers = {
-            "Authorization": "Basic os_v2_app_c5lk3msgarb7nccxhhs4jru6ziyuegufbgruqpv62o4rip5bubxxxcmqto3pyuoovlcu6smuhf76rvj2d7gkm3llqatq2kwe7igrf4a",
+            "Authorization": f"Basic {onesignal_api_key}",
             "Content-Type": "application/json"
         }
         data = {
-            "app_id": "1756adb2-4604-43f6-8857-39e5c4c69eca",
+            "app_id": onesignal_app_id,
             "headings": {"en": titulo},
             "contents": {"en": mensagem},
             "included_segments": ["Subscribed Users"]

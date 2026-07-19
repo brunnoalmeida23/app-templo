@@ -44,10 +44,10 @@
 </head>
 <body>
     <!-- ============ MENU ============ -->
-    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+    <nav class="navbar navbar-expand-lg sticky-top">
         <div class="container">
             <a class="navbar-brand fw-bold" href="/">
-                <img src="https://res.cloudinary.com/defafu3v2/images/c_scale,w_448,h_318,dpr_2/f_auto,q_auto/v100/tupbao.com.br/wp-content/themes/tupbao-theme/assets/images/logo-tupbao/logo-tupbao.png?_i=AA" alt="TUPBAO">
+                <img src="{{ url_for('static', filename='logo-tupbao.png') }}" alt="TUPBAO" style="height: 45px;">
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuPrincipal" aria-controls="menuPrincipal" aria-expanded="false" aria-label="Menu">
                 <span class="navbar-toggler-icon"></span>
@@ -114,7 +114,7 @@
 
     <footer class="footer text-white text-center py-4">
         <div class="container">
-            <img src="https://res.cloudinary.com/defafu3v2/images/c_scale,w_448,h_318,dpr_2/f_auto,q_auto/v100/tupbao.com.br/wp-content/themes/tupbao-theme/assets/images/logo-tupbao/logo-tupbao.png?_i=AA" alt="TUPBAO" style="height:35px; margin-bottom:10px;">
+            <img src="{{ url_for('static', filename='logo-tupbao.png') }}" alt="TUPBAO" style="height:35px; margin-bottom:10px;">
             <p class="mb-1">Templo de Umbanda Pai Benedito das Almas e Obaluaê</p>
             <p class="mb-0 small">Axé e que a paz de Oxalá esteja com todos! 🕊️</p>
         </div>

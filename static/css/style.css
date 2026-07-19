@@ -91,7 +91,7 @@ body::before {
     .navbar-nav .nav-link:hover::after { width: 80%; }
 }
 
-.navbar-nav .nav-link:hover { color: var(--roxo) !important; }
+.navbar-nav .nav-link:hover { color: var(--ambar) !important; }
 [data-theme="dark"] .navbar-nav .nav-link:hover { color: var(--ambar) !important; }
 
 /* ============ MENU HAMBÚRGUER ============ */

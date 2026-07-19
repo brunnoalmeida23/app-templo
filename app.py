@@ -292,7 +292,7 @@ def cadastrar_publicacao():
         flash(f'✅ {tipo.capitalize()} cadastrado(a) com sucesso!')
         if tipo == 'aviso':
             enviar_notificacao("📢 Novo Aviso - TUPBAO", titulo)
-	if tipo == 'limpeza':
+        if tipo == 'limpeza':
             enviar_notificacao("🧹 Nova Limpeza - TUPBAO", titulo)
         return redirect(url_for('admin'))
     funcao = session.get('funcao', 'membro')

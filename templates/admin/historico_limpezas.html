@@ -18,11 +18,11 @@
         {% endif %}
     {% endwith %}
 
-    {% if periodos %}
-        {% for periodo, checkins in periodos.items() %}
+    {% if meses %}
+        {% for mes, checkins in meses.items() %}
         <div class="card shadow-sm mb-4">
             <div class="card-header" style="background-color: var(--roxo); color: white;">
-                <strong><i class="bi bi-calendar-range"></i> {{ periodo }}</strong>
+                <strong><i class="bi bi-calendar-month"></i> {{ mes }}</strong>
                 <span class="badge bg-light text-dark ms-2">{{ checkins|length }} confirmação(ões)</span>
             </div>
             <div class="card-body p-0">
@@ -32,6 +32,7 @@
                             <tr>
                                 <th>Data/Hora</th>
                                 <th>Grupo</th>
+                                <th>Período</th>
                                 <th>Confirmado por</th>
                                 <th style="width: 60px;"></th>
                             </tr>
@@ -41,6 +42,7 @@
                             <tr>
                                 <td>{{ c.data_checkin.strftime('%d/%m/%Y às %H:%M') }}</td>
                                 <td><strong>{{ c.grupo }}</strong></td>
+                                <td><small class="text-muted">{{ c.periodo if c.periodo else '-' }}</small></td>
                                 <td>{{ c.usuario_nome }}</td>
                                 <td>
                                     <a href="/admin/limpezas/excluir/{{ c.id }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Excluir este check-in?')" title="Excluir">

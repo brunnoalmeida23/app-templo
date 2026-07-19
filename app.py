@@ -232,16 +232,17 @@ def historico_limpezas():
         flash('Acesso restrito.')
         return redirect(url_for('dashboard'))
     
-    checkins = CheckinLimpeza.query.order_by(CheckinLimpeza.periodo.desc(), CheckinLimpeza.data_checkin.desc()).all()
+    checkins = CheckinLimpeza.query.order_by(CheckinLimpeza.data_checkin.desc()).all()
     
-    periodos = {}
+    # Agrupar por mês/ano
+    meses = {}
     for c in checkins:
-        chave = c.periodo if c.periodo else 'Sem período'
-        if chave not in periodos:
-            periodos[chave] = []
-        periodos[chave].append(c)
+        chave = c.data_checkin.strftime('%m/%Y') if c.data_checkin else 'Sem data'
+        if chave not in meses:
+            meses[chave] = []
+        meses[chave].append(c)
     
-    return render_template('admin/historico_limpezas.html', periodos=periodos)
+    return render_template('admin/historico_limpezas.html', meses=meses)
 
 # ============ ADMIN ============
 
@@ -292,7 +293,7 @@ def cadastrar_publicacao():
         flash(f'✅ {tipo.capitalize()} cadastrado(a) com sucesso!')
         if tipo == 'aviso':
             enviar_notificacao("📢 Novo Aviso - TUPBAO", titulo)
-	if tipo == 'limpeza':
+        if tipo == 'limpeza':
             enviar_notificacao("🧹 Nova Limpeza - TUPBAO", titulo)
         return redirect(url_for('admin'))
     funcao = session.get('funcao', 'membro')
@@ -331,6 +332,8 @@ def editar_publicacao(id):
             pub.data_evento = None
         db.session.commit()
         flash('✅ Publicação atualizada com sucesso!')
+        if pub.tipo == 'limpeza':
+            enviar_notificacao("🧹 Limpeza Atualizada - TUPBAO", pub.titulo)
         return redirect(url_for('admin'))
     return render_template('admin/editar.html', pub=pub)
 

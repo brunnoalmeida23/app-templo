@@ -129,16 +129,13 @@ body::before {
     color: #000;
 }
 
-/* Mobile: fixo no centro da barra, não desce com o menu */
+/* Mobile: fixo na tela, independente do menu */
 @media (max-width: 991px) {
     .theme-toggle-btn {
-        position: absolute;
+        position: fixed;
         left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%);
-    }
-    .navbar .container {
-        position: relative;
+        top: 18px;
+        transform: translateX(-50%);
     }
 }
 

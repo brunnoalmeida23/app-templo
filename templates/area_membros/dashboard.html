@@ -51,6 +51,7 @@
                 <p class="text-muted small">Escala da casa</p>
             </a>
         </div>
+        {% if session.is_admin %}
         <div class="col-lg-4 col-md-6 mb-3">
             <a href="/dashboard/financeiro" class="card card-dash shadow-sm p-3 text-center text-decoration-none text-dark">
                 <i class="bi bi-cash-coin" style="font-size: 2rem; color: var(--roxo);"></i>
@@ -58,7 +59,6 @@
                 <p class="text-muted small">Transparência</p>
             </a>
         </div>
-        {% if session.is_admin %}
         <div class="col-lg-4 col-md-6 mb-3">
             <a href="/admin" class="card card-dash shadow-sm p-3 text-center text-decoration-none text-dark" style="border-top-color: var(--roxo);">
                 <i class="bi bi-gear" style="font-size: 2rem; color: var(--roxo);"></i>

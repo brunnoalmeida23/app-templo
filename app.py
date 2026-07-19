@@ -103,6 +103,10 @@ def projetos():
     projetos = Publicacao.query.filter_by(tipo='projeto').order_by(Publicacao.data_publicacao.desc()).all()
     return render_template('projetos.html', projetos=projetos)
 
+@app.route('/guia')
+def guia():
+    return render_template('guia.html')
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -234,7 +238,6 @@ def historico_limpezas():
     
     checkins = CheckinLimpeza.query.order_by(CheckinLimpeza.data_checkin.desc()).all()
     
-    # Agrupar por mês/ano
     meses = {}
     for c in checkins:
         chave = c.data_checkin.strftime('%m/%Y') if c.data_checkin else 'Sem data'

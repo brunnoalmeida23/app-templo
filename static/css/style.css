@@ -1,4 +1,4 @@
-/* ============ MODO CLARO (PADRÃO) ============ */
+/* ============ CORES OFICIAIS TUPBAO ============ */
 :root {
     --bg: #F9F7F4;
     --bg-card: #FFFFFF;
@@ -8,44 +8,65 @@
     --roxo: #1a3a52;
     --ambar: #DAA520;
     --destaque: #1a3a52;
-    --border: #dee2e6;
-    --hover: #f0ece6;
+    --border: rgba(26, 58, 82, 0.1);
+    --hover: rgba(26, 58, 82, 0.04);
+    --fonte-titulos: 'Cinzel', serif;
+    --fonte-corpo: 'Montserrat', sans-serif;
 }
 
 /* ============ MODO ESCURO ============ */
 [data-theme="dark"] {
-    --bg: #000000;
-    --bg-card: #1A1A1A;
-    --bg-input: #111;
-    --texto: #FFFFFF;
-    --texto-claro: #CCCCCC;
-    --roxo: #1A1A1A;
+    --bg: #0D1B2A;
+    --bg-card: #1A2D42;
+    --bg-input: #152535;
+    --texto: #E8E6E0;
+    --texto-claro: #B0AEA8;
+    --roxo: #0D1B2A;
     --ambar: #DAA520;
     --destaque: #DAA520;
-    --border: #333;
-    --hover: #222;
+    --border: rgba(255, 255, 255, 0.08);
+    --hover: rgba(255, 255, 255, 0.05);
 }
 
 /* ============ BASE ============ */
 body {
     background-color: var(--bg);
     color: var(--texto);
-    font-family: 'Montserrat', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: var(--fonte-corpo);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     transition: background-color 0.3s, color 0.3s;
+    line-height: 1.8;
 }
 
 main {
     flex: 1;
 }
 
+/* ============ TEXTURA LINHO ============ */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-image: url('https://www.transparenttextures.com/patterns/linen.png');
+    opacity: 0.03;
+    z-index: -1;
+    pointer-events: none;
+}
+
 /* ============ NAVBAR ============ */
 .navbar {
-    background-color: var(--roxo) !important;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-    border-bottom: 2px solid var(--ambar);
+    background-color: rgba(249, 247, 244, 0.95) !important;
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    padding: 10px 0;
+    z-index: 1000;
+}
+
+[data-theme="dark"] .navbar {
+    background-color: rgba(13, 27, 42, 0.95) !important;
 }
 
 .navbar-brand img {
@@ -53,12 +74,33 @@ main {
 }
 
 .navbar-nav .nav-link {
-    color: #fff !important;
+    font-family: var(--fonte-corpo);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: var(--texto) !important;
     transition: 0.3s;
+    position: relative;
+}
+
+.navbar-nav .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background-color: var(--roxo);
+    transition: all 0.4s ease;
+    transform: translateX(-50%);
+}
+
+.navbar-nav .nav-link:hover::after {
+    width: 80%;
 }
 
 .navbar-nav .nav-link:hover {
-    color: var(--ambar) !important;
+    color: var(--roxo) !important;
 }
 
 /* ============ BOTÃO TEMA ============ */
@@ -76,20 +118,25 @@ main {
 
 .theme-toggle:hover {
     background-color: var(--ambar);
-    color: #000;
+    color: #fff;
 }
 
 /* ============ RODAPÉ ============ */
 .footer {
     background-color: var(--roxo);
-    border-top: 2px solid var(--ambar);
+    border-top: 1px solid var(--border);
     margin-top: auto;
     color: #fff;
+    padding: 2rem 0;
+}
+
+[data-theme="dark"] .footer {
+    background-color: #0A1520;
 }
 
 /* ============ TÍTULOS ============ */
 h1, h2, h3, h4, .titulo-secao {
-    font-family: 'Cinzel', 'Cormorant Garamond', serif;
+    font-family: var(--fonte-titulos);
     color: var(--destaque);
     font-weight: 700;
 }
@@ -116,11 +163,12 @@ h1, h2, h3, h4, .titulo-secao {
     transition: 0.3s;
     background-color: var(--bg-card);
     color: var(--texto);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
 }
 
 .card h5, .card p { color: var(--texto) !important; }
 .card .text-muted { color: var(--texto-claro) !important; }
-.card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.2) !important; }
+.card:hover { transform: translateY(-5px); box-shadow: 0 15px 40px rgba(26, 58, 82, 0.1) !important; }
 
 .card-dash {
     border: 1px solid var(--border);
@@ -130,22 +178,26 @@ h1, h2, h3, h4, .titulo-secao {
     text-decoration: none;
     background-color: var(--bg-card);
     color: var(--texto);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
 }
 
 .card-dash h5, .card-dash p, .card-dash .text-dark { color: var(--texto) !important; }
-.card-dash:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.2) !important; }
+.card-dash:hover { transform: translateY(-5px); box-shadow: 0 15px 40px rgba(26, 58, 82, 0.1) !important; }
 .card-dash .text-muted { color: var(--texto-claro) !important; }
 
 /* ============ BOTÕES ============ */
 .btn-templo {
     background-color: var(--roxo);
     color: #fff;
-    border: 1px solid var(--ambar);
+    border: 1px solid var(--roxo);
     padding: 10px 25px;
     border-radius: 6px;
     transition: 0.3s;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
-.btn-templo:hover { background-color: #0f2438; color: #fff; }
+.btn-templo:hover { background-color: #0f2438; color: #fff; transform: translateY(-2px); }
 
 .btn-ambar {
     background-color: var(--ambar);
@@ -155,8 +207,10 @@ h1, h2, h3, h4, .titulo-secao {
     border-radius: 6px;
     transition: 0.3s;
     font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
-.btn-ambar:hover { background-color: #b8860b; color: #fff; }
+.btn-ambar:hover { background-color: #b8860b; color: #fff; transform: translateY(-2px); }
 
 [data-theme="light"] .btn-ambar { color: #000; }
 [data-theme="light"] .btn-ambar:hover { color: #000; }
@@ -190,7 +244,7 @@ h1, h2, h3, h4, .titulo-secao {
     padding: 15px;
     margin-bottom: 15px;
     border-radius: 0 8px 8px 0;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     color: var(--texto);
 }
 
@@ -212,7 +266,7 @@ h1, h2, h3, h4, .titulo-secao {
 /* ============ DROPDOWN ============ */
 .dropdown-menu { background-color: var(--bg-card); border: 1px solid var(--border); }
 .dropdown-item { color: var(--texto); }
-.dropdown-item:hover { background-color: var(--hover); color: var(--ambar); }
+.dropdown-item:hover { background-color: var(--hover); color: var(--roxo); }
 .dropdown-divider { border-color: var(--border); }
 
 /* ============ BADGES ============ */
@@ -221,13 +275,13 @@ h1, h2, h3, h4, .titulo-secao {
 .text-muted { color: var(--texto-claro) !important; }
 
 /* ============ ALERTAS ============ */
-.alert-warning { background-color: #2A2000; color: var(--ambar); border-color: var(--ambar); }
-.alert-success { background-color: #0D2A0D; color: #4CAF50; border-color: #4CAF50; }
-.alert-info { background-color: #0D1F2A; color: #64B5F6; border-color: #64B5F6; }
+.alert-warning { background-color: #fff8e1; color: #856404; border-color: #ffc107; }
+.alert-success { background-color: #e8f5e9; color: #2e7d32; border-color: #4caf50; }
+.alert-info { background-color: #e3f2fd; color: #1565c0; border-color: #64b5f6; }
 
-[data-theme="light"] .alert-warning { background-color: #fff8e1; color: #856404; border-color: #ffc107; }
-[data-theme="light"] .alert-success { background-color: #e8f5e9; color: #2e7d32; border-color: #4caf50; }
-[data-theme="light"] .alert-info { background-color: #e3f2fd; color: #1565c0; border-color: #64b5f6; }
+[data-theme="dark"] .alert-warning { background-color: #2A2000; color: var(--ambar); border-color: var(--ambar); }
+[data-theme="dark"] .alert-success { background-color: #0D2A0D; color: #4CAF50; border-color: #4CAF50; }
+[data-theme="dark"] .alert-info { background-color: #0D1F2A; color: #64B5F6; border-color: #64B5F6; }
 
 /* ============ LOGIN ============ */
 .login-card {

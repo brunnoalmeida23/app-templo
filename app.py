@@ -491,7 +491,7 @@ _banco_inicializado = True
 @app.before_request
 def inicializar_banco():
     global _banco_inicializado
-    if not _banco_inicializado:
+    if not _banco_inicializado and request.path != '/resetar-banco':
         db.create_all()
         criar_admin_inicial()
         _banco_inicializado = True

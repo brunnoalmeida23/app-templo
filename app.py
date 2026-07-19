@@ -486,7 +486,7 @@ def criar_admin_inicial():
         db.session.commit()
         print("✅ Super Admin criado: admin@templo.com / mudar123")
 
-_banco_inicializado = True
+_banco_inicializado = False
 
 @app.before_request
 def inicializar_banco():

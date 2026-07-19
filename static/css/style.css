@@ -111,7 +111,7 @@ body::before {
     color: var(--ambar) !important;
 }
 
-/* ============ BOTÃO TEMA ÚNICO ============ */
+/* ============ BOTÃO TEMA ÚNICO (FIXO, NÃO DESCE COM MENU) ============ */
 .theme-toggle-btn {
     background: none;
     border: 1px solid var(--ambar);
@@ -121,6 +121,7 @@ body::before {
     padding: 6px 10px;
     border-radius: 50%;
     transition: 0.3s;
+    z-index: 1001;
 }
 
 .theme-toggle-btn:hover {
@@ -128,12 +129,13 @@ body::before {
     color: #000;
 }
 
-/* Mobile: centralizado entre logo e menu */
+/* Mobile: fixo no centro da barra, não desce com o menu */
 @media (max-width: 991px) {
     .theme-toggle-btn {
         position: absolute;
         left: 50%;
-        transform: translateX(-50%);
+        top: 50%;
+        transform: translate(-50%, -50%);
     }
     .navbar .container {
         position: relative;

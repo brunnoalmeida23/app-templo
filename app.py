@@ -38,6 +38,13 @@ class CheckinLimpeza(db.Model):
     periodo = db.Column(db.String(50), nullable=True)
     data_checkin = db.Column(db.DateTime, default=datetime.utcnow)
 
+class Mensalidade(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False)
+    mes_ano = db.Column(db.String(7), nullable=False)
+    pago = db.Column(db.Boolean, default=False)
+    data_pagamento = db.Column(db.DateTime, nullable=True)
+
 class Publicacao(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     titulo = db.Column(db.String(200), nullable=False)
@@ -62,6 +69,9 @@ def pode_gerenciar(tipo=None):
 
 def pode_gerenciar_usuarios():
     return session.get('funcao') == 'super_admin'
+
+def pode_gerenciar_tesouraria():
+    return session.get('user_nome') in ['Flavia', 'Lilian', 'Roberto', 'Dirigente']
 
 def enviar_notificacao(titulo, mensagem):
     """Envia notificação push via OneSignal usando variáveis de ambiente"""
@@ -185,6 +195,65 @@ def ver_financeiro():
         return redirect(url_for('login'))
     financeiro = Publicacao.query.filter_by(tipo='financeiro').order_by(Publicacao.data_publicacao.desc()).all()
     return render_template('area_membros/financeiro.html', financeiro=financeiro)
+
+# ============ TESOURARIA - MENSALIDADES ============
+
+@app.route('/dashboard/mensalidades', methods=['GET', 'POST'])
+def mensalidades():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    if not pode_gerenciar_tesouraria():
+        flash('Acesso restrito à tesouraria.')
+        return redirect(url_for('dashboard'))
+    
+    mes_atual = datetime.utcnow().strftime('%m/%Y')
+    membros = Usuario.query.filter_by(ativo=True).order_by(Usuario.nome).all()
+    
+    if request.method == 'POST':
+        for membro in membros:
+            pago = request.form.get(f'pago_{membro.id}') == 'on'
+            mensalidade = Mensalidade.query.filter_by(usuario_id=membro.id, mes_ano=mes_atual).first()
+            if pago and not mensalidade:
+                nova = Mensalidade(usuario_id=membro.id, mes_ano=mes_atual, pago=True, data_pagamento=datetime.utcnow())
+                db.session.add(nova)
+            elif not pago and mensalidade:
+                db.session.delete(mensalidade)
+        db.session.commit()
+        flash('✅ Mensalidades atualizadas!')
+        return redirect(url_for('mensalidades'))
+    
+    pagos = {}
+    for m in membros:
+        pagos[m.id] = Mensalidade.query.filter_by(usuario_id=m.id, mes_ano=mes_atual, pago=True).first() is not None
+    
+    return render_template('area_membros/mensalidades.html', membros=membros, pagos=pagos, mes_atual=mes_atual)
+
+@app.route('/admin/enviar-cobranca')
+def enviar_cobranca():
+    if not pode_gerenciar_tesouraria():
+        flash('Acesso restrito à tesouraria.')
+        return redirect(url_for('dashboard'))
+    
+    mes_atual = datetime.utcnow().strftime('%m/%Y')
+    dia = datetime.utcnow().day
+    
+    if dia < 10:
+        flash('Só pode enviar cobrança a partir do dia 10.')
+        return redirect(url_for('mensalidades'))
+    
+    membros = Usuario.query.filter_by(ativo=True).all()
+    pendentes = []
+    for m in membros:
+        if not Mensalidade.query.filter_by(usuario_id=m.id, mes_ano=mes_atual, pago=True).first():
+            pendentes.append(m.nome)
+    
+    if pendentes:
+        enviar_notificacao("💰 Mensalidade em Aberto - TUPBAO", "Favor entrar em contato com a tesouraria.")
+        flash(f'✅ Cobrança enviada! {len(pendentes)} membros pendentes.')
+    else:
+        flash('✅ Todos estão em dia!')
+    
+    return redirect(url_for('mensalidades'))
 
 # ============ CHECK-IN LIMPEZA ============
 

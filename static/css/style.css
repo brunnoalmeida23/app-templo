@@ -14,7 +14,7 @@
     --fonte-corpo: 'Montserrat', sans-serif;
 }
 
-/* ============ MODO ESCURO ============ */
+/* ============ MODO ESCURO (Ogum + Obaluaê) ============ */
 [data-theme="dark"] {
     --bg: #0D1B2A;
     --bg-card: #1A2D42;
@@ -24,8 +24,8 @@
     --roxo: #0D1B2A;
     --ambar: #DAA520;
     --destaque: #DAA520;
-    --border: rgba(255, 255, 255, 0.08);
-    --hover: rgba(255, 255, 255, 0.05);
+    --border: rgba(218, 165, 32, 0.15);
+    --hover: rgba(218, 165, 32, 0.08);
 }
 
 /* ============ BASE ============ */
@@ -95,6 +95,10 @@ body::before {
     transform: translateX(-50%);
 }
 
+[data-theme="dark"] .navbar-nav .nav-link::after {
+    background-color: var(--ambar);
+}
+
 .navbar-nav .nav-link:hover::after {
     width: 80%;
 }
@@ -103,22 +107,37 @@ body::before {
     color: var(--roxo) !important;
 }
 
-/* ============ BOTÃO TEMA ============ */
-.theme-toggle {
+[data-theme="dark"] .navbar-nav .nav-link:hover {
+    color: var(--ambar) !important;
+}
+
+/* ============ BOTÃO TEMA ÚNICO ============ */
+.theme-toggle-btn {
     background: none;
     border: 1px solid var(--ambar);
     color: var(--ambar);
     cursor: pointer;
-    font-size: 1.2rem;
-    padding: 5px 10px;
+    font-size: 1.1rem;
+    padding: 6px 10px;
     border-radius: 50%;
     transition: 0.3s;
-    margin-left: 10px;
 }
 
-.theme-toggle:hover {
+.theme-toggle-btn:hover {
     background-color: var(--ambar);
-    color: #fff;
+    color: #000;
+}
+
+/* Mobile: centralizado entre logo e menu */
+@media (max-width: 991px) {
+    .theme-toggle-btn {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+    .navbar .container {
+        position: relative;
+    }
 }
 
 /* ============ RODAPÉ ============ */
@@ -185,6 +204,22 @@ h1, h2, h3, h4, .titulo-secao {
 .card-dash:hover { transform: translateY(-5px); box-shadow: 0 15px 40px rgba(26, 58, 82, 0.1) !important; }
 .card-dash .text-muted { color: var(--texto-claro) !important; }
 
+/* ============ ÍCONES NO MODO ESCURO ============ */
+[data-theme="dark"] .card-dash i,
+[data-theme="dark"] .card i,
+[data-theme="dark"] .bi-heart,
+[data-theme="dark"] .bi-calendar-heart,
+[data-theme="dark"] .bi-calendar-x,
+[data-theme="dark"] .bi-megaphone,
+[data-theme="dark"] .bi-bucket,
+[data-theme="dark"] .bi-cash-coin,
+[data-theme="dark"] .bi-person-gear,
+[data-theme="dark"] .bi-gear,
+[data-theme="dark"] .bi-speedometer2,
+[data-theme="dark"] .bi-bell-fill {
+    color: var(--ambar) !important;
+}
+
 /* ============ BOTÕES ============ */
 .btn-templo {
     background-color: var(--roxo);
@@ -198,6 +233,13 @@ h1, h2, h3, h4, .titulo-secao {
     letter-spacing: 0.5px;
 }
 .btn-templo:hover { background-color: #0f2438; color: #fff; transform: translateY(-2px); }
+
+[data-theme="dark"] .btn-templo {
+    background-color: var(--ambar);
+    color: #000;
+    border-color: var(--ambar);
+}
+[data-theme="dark"] .btn-templo:hover { background-color: #b8860b; color: #000; }
 
 .btn-ambar {
     background-color: var(--ambar);
@@ -225,6 +267,8 @@ h1, h2, h3, h4, .titulo-secao {
 .table { color: var(--texto); }
 .table-hover tbody tr:hover { background-color: var(--hover); }
 .table thead { background-color: var(--roxo) !important; color: white; }
+
+[data-theme="dark"] .table thead { background-color: var(--ambar) !important; color: #000; }
 
 /* ============ LISTA DE GIRAS ============ */
 .list-group-item {
@@ -267,6 +311,7 @@ h1, h2, h3, h4, .titulo-secao {
 .dropdown-menu { background-color: var(--bg-card); border: 1px solid var(--border); }
 .dropdown-item { color: var(--texto); }
 .dropdown-item:hover { background-color: var(--hover); color: var(--roxo); }
+[data-theme="dark"] .dropdown-item:hover { color: var(--ambar); }
 .dropdown-divider { border-color: var(--border); }
 
 /* ============ BADGES ============ */

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Guia de Instalação - TUPBAO{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <h2 class="titulo-secao text-center"><i class="bi bi-phone"></i> Como Instalar o App</h2>
+    <hr class="linha-ambar">
+
+    <div class="row mt-4">
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-1-circle-fill" style="font-size: 2rem; color: var(--roxo);"></i>
+                    <h5 class="mt-2">Abra o Chrome</h5>
+                    <p>Acesse:<br><strong>tupbao.onrender.com</strong></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-2-circle-fill" style="font-size: 2rem; color: var(--roxo);"></i>
+                    <h5 class="mt-2">Instale o App</h5>
+                    <p>Toque nos <strong>3 pontinhos</strong> e em<br><strong>"Instalar aplicativo"</strong></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-3-circle-fill" style="font-size: 2rem; color: var(--roxo);"></i>
+                    <h5 class="mt-2">Permita Notificações</h5>
+                    <p>Quando aparecer a pergunta, toque em <strong>"Permitir"</strong></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-4">
+        <a href="/dashboard" class="btn btn-ambar"><i class="bi bi-arrow-left"></i> Voltar</a>
+    </div>
+</div>
+{% endblock %}

@@ -19,6 +19,14 @@
         {% endif %}
     {% endwith %}
 
+    <!-- Alerta de notificações bloqueadas -->
+    <div class="alert alert-warning alert-dismissible fade show mt-3" role="alert" id="alertaNotificacoes" style="display: none; border-left: 4px solid var(--ambar);">
+        <i class="bi bi-bell-slash"></i> <strong>Notificações bloqueadas!</strong><br>
+        <small>Para receber avisos do templo, libere nas configurações do Chrome.</small>
+        <a href="/guia" class="btn btn-sm btn-outline-dark ms-2">Ver guia</a>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
     <!-- Alerta de novos avisos -->
     {% if novos_avisos > 0 %}
     <div class="alert alert-warning alert-dismissible fade show mt-3" role="alert" style="border-left: 4px solid var(--ambar); background-color: #fff8e1;">
@@ -94,4 +102,13 @@
         </div>
     {% endif %}
 </div>
+
+<script>
+// Verificar se notificações estão bloqueadas
+if ('Notification' in window) {
+    if (Notification.permission === 'denied') {
+        document.getElementById('alertaNotificacoes').style.display = 'block';
+    }
+}
+</script>
 {% endblock %}

@@ -22,6 +22,7 @@ class Usuario(db.Model):
     is_admin = db.Column(db.Boolean, default=False)
     funcao = db.Column(db.String(50), default='membro')
     ultimo_acesso = db.Column(db.DateTime, nullable=True)
+    ativo = db.Column(db.Boolean, default=True)
 
 class AvisoLido(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -67,10 +68,7 @@ def enviar_notificacao(titulo, mensagem):
     try:
         onesignal_app_id = os.environ.get('ONESIGNAL_APP_ID', '')
         onesignal_api_key = os.environ.get('ONESIGNAL_API_KEY', '')
-        print(f"DEBUG: App ID: {onesignal_app_id[:10]}...")
-        print(f"DEBUG: API Key: {onesignal_api_key[:10]}...")
         if not onesignal_app_id or not onesignal_api_key:
-            print("DEBUG: Variáveis de ambiente não encontradas!")
             return
         url = "https://onesignal.com/api/v1/notifications"
         headers = {
@@ -83,10 +81,9 @@ def enviar_notificacao(titulo, mensagem):
             "contents": {"en": mensagem},
             "included_segments": ["Active Subscriptions"]
         }
-        response = requests.post(url, json=data, headers=headers)
-        print(f"DEBUG: OneSignal response: {response.status_code} - {response.text}")
-    except Exception as e:
-        print(f"DEBUG: Erro ao enviar notificação: {e}")
+        requests.post(url, json=data, headers=headers)
+    except:
+        pass
 
 # ============ ROTAS PÚBLICAS ============
 
@@ -113,6 +110,9 @@ def login():
         senha = request.form['senha']
         user = Usuario.query.filter_by(email=email).first()
         if user and check_password_hash(user.senha, senha):
+            if not user.ativo:
+                flash('Usuário bloqueado. Entre em contato com o dirigente.')
+                return render_template('login.html')
             session['user_id'] = user.id
             session['user_nome'] = user.nome
             session['is_admin'] = user.is_admin
@@ -290,7 +290,6 @@ def cadastrar_publicacao():
         db.session.add(nova)
         db.session.commit()
         flash(f'✅ {tipo.capitalize()} cadastrado(a) com sucesso!')
-        # Enviar notificação push se for aviso
         if tipo == 'aviso':
             enviar_notificacao("📢 Novo Aviso - TUPBAO", titulo)
         return redirect(url_for('admin'))
@@ -411,6 +410,31 @@ def excluir_usuario(id):
         db.session.delete(user)
         db.session.commit()
         flash('🗑️ Usuário excluído.')
+    return redirect(url_for('gerenciar_usuarios'))
+
+@app.route('/admin/usuarios/bloquear/<int:id>')
+def bloquear_usuario(id):
+    if not pode_gerenciar_usuarios():
+        flash('Acesso restrito ao Dirigente.')
+        return redirect(url_for('dashboard'))
+    user = Usuario.query.get_or_404(id)
+    if user.email == 'admin@templo.com':
+        flash('Não é possível bloquear o admin principal.')
+    else:
+        user.ativo = False
+        db.session.commit()
+        flash(f'🔒 {user.nome} bloqueado.')
+    return redirect(url_for('gerenciar_usuarios'))
+
+@app.route('/admin/usuarios/desbloquear/<int:id>')
+def desbloquear_usuario(id):
+    if not pode_gerenciar_usuarios():
+        flash('Acesso restrito ao Dirigente.')
+        return redirect(url_for('dashboard'))
+    user = Usuario.query.get_or_404(id)
+    user.ativo = True
+    db.session.commit()
+    flash(f'🔓 {user.nome} desbloqueado.')
     return redirect(url_for('gerenciar_usuarios'))
 
 @app.route('/perfil', methods=['GET', 'POST'])

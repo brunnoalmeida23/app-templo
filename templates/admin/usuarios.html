@@ -13,7 +13,7 @@
     {% with messages = get_flashed_messages() %}
         {% if messages %}
             {% for message in messages %}
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
                     {{ message }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
@@ -29,6 +29,7 @@
                     <th>Nome</th>
                     <th>E-mail</th>
                     <th>Função</th>
+                    <th>Status</th>
                     <th>Último Acesso</th>
                     <th>Ações</th>
                 </tr>
@@ -39,29 +40,30 @@
                     <td><strong>{{ u.nome }}</strong></td>
                     <td>{{ u.email }}</td>
                     <td>
-                        {% if u.funcao == 'super_admin' %}
-                        <span class="badge" style="background-color: var(--roxo);">⭐ Super Admin</span>
-                        {% elif u.funcao == 'admin' %}
-                        <span class="badge" style="background-color: var(--ambar);">🔧 Admin</span>
-                        {% elif u.funcao == 'tesouraria' %}
-                        <span class="badge bg-secondary">💰 Tesouraria</span>
-                        {% elif u.funcao == 'limpezas' %}
-                        <span class="badge bg-info text-dark">🧹 Limpezas</span>
-                        {% else %}
-                        <span class="badge bg-light text-dark">👤 Membro</span>
+                        {% if u.funcao == 'super_admin' %}<span class="badge" style="background-color: var(--roxo);">⭐ Super Admin</span>
+                        {% elif u.funcao == 'admin' %}<span class="badge" style="background-color: var(--ambar);">🔧 Admin</span>
+                        {% elif u.funcao == 'tesouraria' %}<span class="badge bg-secondary">💰 Tesouraria</span>
+                        {% elif u.funcao == 'limpezas' %}<span class="badge bg-info text-dark">🧹 Limpezas</span>
+                        {% else %}<span class="badge bg-light text-dark">👤 Membro</span>
                         {% endif %}
                     </td>
                     <td>
-                        {% if u.ultimo_acesso %}
-                        {{ u.ultimo_acesso.strftime('%d/%m/%Y %H:%M') }}
+                        {% if u.ativo %}
+                        <span class="badge bg-success">✅ Ativo</span>
                         {% else %}
-                        Nunca acessou
+                        <span class="badge bg-danger">🚫 Bloqueado</span>
                         {% endif %}
                     </td>
+                    <td>{{ u.ultimo_acesso.strftime('%d/%m/%Y %H:%M') if u.ultimo_acesso else 'Nunca' }}</td>
                     <td>
-                        <a href="/admin/usuarios/editar/{{ u.id }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                        <a href="/admin/usuarios/editar/{{ u.id }}" class="btn btn-sm btn-outline-primary" title="Editar"><i class="bi bi-pencil"></i></a>
                         {% if u.email != 'admin@templo.com' %}
-                        <a href="/admin/usuarios/excluir/{{ u.id }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Excluir {{ u.nome }}?')"><i class="bi bi-trash"></i></a>
+                            {% if u.ativo %}
+                            <a href="/admin/usuarios/bloquear/{{ u.id }}" class="btn btn-sm btn-outline-warning" title="Bloquear" onclick="return confirm('Bloquear {{ u.nome }}?')"><i class="bi bi-lock"></i></a>
+                            {% else %}
+                            <a href="/admin/usuarios/desbloquear/{{ u.id }}" class="btn btn-sm btn-outline-success" title="Desbloquear" onclick="return confirm('Desbloquear {{ u.nome }}?')"><i class="bi bi-unlock"></i></a>
+                            {% endif %}
+                            <a href="/admin/usuarios/excluir/{{ u.id }}" class="btn btn-sm btn-outline-danger" title="Excluir" onclick="return confirm('Excluir {{ u.nome }}?')"><i class="bi bi-trash"></i></a>
                         {% endif %}
                     </td>
                 </tr>
@@ -70,7 +72,11 @@
         </table>
     </div>
     {% else %}
-    <p>Nenhum usuário cadastrado.</p>
+    <div class="text-center py-5 bg-white rounded shadow-sm">
+        <i class="bi bi-people" style="font-size: 4rem; color: var(--roxo);"></i>
+        <p class="lead mt-3">Nenhum usuário cadastrado.</p>
+        <a href="/admin/usuarios/cadastrar" class="btn btn-ambar"><i class="bi bi-person-plus"></i> Criar Primeiro Usuário</a>
+    </div>
     {% endif %}
 </div>
 {% endblock %}

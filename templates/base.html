@@ -49,6 +49,12 @@
             <a class="navbar-brand fw-bold" href="/">
                 <img src="{{ url_for('static', filename='logo-tupbao.png') }}" alt="TUPBAO" style="height: 45px;">
             </a>
+            
+            <!-- BOTÃO TEMA MOBILE (centralizado entre logo e menu) -->
+            <button class="theme-toggle-mobile" onclick="toggleTheme()" title="Alternar tema">
+                <i class="bi bi-moon-fill" id="themeIconMobile"></i>
+            </button>
+            
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuPrincipal" aria-controls="menuPrincipal" aria-expanded="false" aria-label="Menu">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -90,7 +96,8 @@
                         <li class="nav-item"><a class="nav-link" href="/login"><i class="bi bi-lock"></i> Portal TupLovers</a></li>
                         <li class="nav-item"><a class="nav-link" href="https://tupbao.com.br" target="_blank"><i class="bi bi-globe"></i> Site Oficial</a></li>
                     {% endif %}
-                    <li class="nav-item">
+                    <!-- BOTÃO TEMA DESKTOP (escondido no mobile) -->
+                    <li class="nav-item theme-toggle-desktop">
                         <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">
                             <i class="bi bi-moon-fill" id="themeIcon"></i>
                         </button>
@@ -126,14 +133,20 @@
     <script>
         const savedTheme = localStorage.getItem('theme') || 'light';
         document.documentElement.setAttribute('data-theme', savedTheme);
-        document.getElementById('themeIcon').className = savedTheme === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-fill';
+        const iconClass = savedTheme === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-fill';
+        document.getElementById('themeIcon').className = iconClass;
+        const mobileIcon = document.getElementById('themeIconMobile');
+        if (mobileIcon) mobileIcon.className = iconClass;
 
         function toggleTheme() {
             const current = document.documentElement.getAttribute('data-theme');
             const next = current === 'light' ? 'dark' : 'light';
             document.documentElement.setAttribute('data-theme', next);
             localStorage.setItem('theme', next);
-            document.getElementById('themeIcon').className = next === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-fill';
+            const newIcon = next === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-fill';
+            document.getElementById('themeIcon').className = newIcon;
+            const mobileIcon = document.getElementById('themeIconMobile');
+            if (mobileIcon) mobileIcon.className = newIcon;
         }
     </script>
     {% block extra_scripts %}{% endblock %}

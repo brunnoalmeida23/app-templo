@@ -212,7 +212,7 @@ def mensalidades():
         return redirect(url_for('dashboard'))
     
     mes_atual = datetime.utcnow().strftime('%m/%Y')
-    isentos = ['Roberto', 'Thais', 'Rafael', 'Vera', 'Flavia', 'Marlon', 'Dirigente']
+    isentos = ['Roberto', 'Thais', 'Rafael', 'Vera', 'Flavia', 'Marlon', 'Dirigente', 'Super-Admin']
     membros = Usuario.query.filter_by(ativo=True).filter(Usuario.nome.notin_(isentos)).order_by(Usuario.nome).all()
     
     if request.method == 'POST':

@@ -32,12 +32,18 @@
                         {% if 'noticia' in tipos_disponiveis %}
                         <option value="noticia">📰 Notícia</option>
                         {% endif %}
+                        {% if 'conta' in tipos_disponiveis %}
+                        <option value="conta">📝 Conta</option>
+                        {% endif %}
+                        {% if 'recebimento' in tipos_disponiveis %}
+                        <option value="recebimento">💵 Recebimento</option>
+                        {% endif %}
                     </select>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label"><i class="bi bi-pencil"></i> Título</label>
-                    <input type="text" name="titulo" class="form-control" required placeholder="Ex: Gira de Preto-Velho">
+                    <input type="text" name="titulo" class="form-control" required placeholder="Ex: Conta de luz - Julho">
                 </div>
 
                 <div class="mb-3">

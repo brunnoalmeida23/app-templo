@@ -201,6 +201,20 @@ def ver_financeiro_publicacoes():
     financeiro = Publicacao.query.filter_by(tipo='financeiro').order_by(Publicacao.data_publicacao.desc()).all()
     return render_template('area_membros/financeiro_publicacoes.html', financeiro=financeiro)
 
+@app.route('/dashboard/financeiro/contas')
+def ver_contas():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    publicacoes = Publicacao.query.filter_by(tipo='conta').order_by(Publicacao.data_publicacao.desc()).all()
+    return render_template('area_membros/financeiro_contas.html', publicacoes=publicacoes)
+
+@app.route('/dashboard/financeiro/recebimentos')
+def ver_recebimentos():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    publicacoes = Publicacao.query.filter_by(tipo='recebimento').order_by(Publicacao.data_publicacao.desc()).all()
+    return render_template('area_membros/financeiro_recebimentos.html', publicacoes=publicacoes)
+
 # ============ TESOURARIA - MENSALIDADES ============
 
 @app.route('/dashboard/mensalidades', methods=['GET', 'POST'])
@@ -256,7 +270,7 @@ def enviar_cobranca():
         flash('Só pode enviar cobrança a partir do dia 10.')
         return redirect(url_for('mensalidades'))
     
-    isentos = ['Roberto', 'Thais', 'Rafael', 'Vera', 'Flavia', 'Marlon', 'Dirigente']
+    isentos = ['Roberto', 'Thais', 'Rafael', 'Vera', 'Flavia', 'Marlon', 'Dirigente', 'Super-Admin']
     membros = Usuario.query.filter_by(ativo=True).filter(Usuario.nome.notin_(isentos)).all()
     pendentes = []
     for m in membros:
@@ -371,7 +385,7 @@ def cadastrar_publicacao():
     funcao = session.get('funcao', 'membro')
     tipos_disponiveis = []
     if funcao in ['super_admin', 'admin']:
-        tipos_disponiveis = ['gira', 'aviso', 'projeto', 'limpeza', 'financeiro', 'noticia']
+        tipos_disponiveis = ['gira', 'aviso', 'projeto', 'limpeza', 'financeiro', 'noticia', 'conta', 'recebimento']
     elif funcao == 'tesouraria':
         tipos_disponiveis = ['financeiro']
     elif funcao == 'limpezas':

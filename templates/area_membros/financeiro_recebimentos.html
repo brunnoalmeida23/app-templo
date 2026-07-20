@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Recebimentos - TUPBAO{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="titulo-secao"><i class="bi bi-piggy-bank"></i> Recebimentos</h2>
+    <hr class="linha-ambar-left">
+    
+    {% if publicacoes %}
+        {% for item in publicacoes %}
+        <div class="aviso-item">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <strong class="titulo-secao">{{ item.titulo }}</strong>
+                    <small class="text-muted"><i class="bi bi-calendar"></i> {{ item.data_publicacao.strftime('%d/%m/%Y') }}</small>
+                    <div class="mt-2 mb-0" style="white-space: pre-line;">{{ item.conteudo }}</div>
+                </div>
+                {% if session.is_admin %}
+                <div class="d-flex gap-1 ms-3">
+                    <a href="/admin/editar/{{ item.id }}" class="btn btn-sm btn-outline-primary" title="Editar"><i class="bi bi-pencil"></i></a>
+                    <a href="/admin/excluir/{{ item.id }}" class="btn btn-sm btn-outline-danger" title="Excluir" onclick="return confirm('Excluir?')"><i class="bi bi-trash"></i></a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="text-center py-4 bg-white rounded shadow-sm">
+            <i class="bi bi-piggy-bank" style="font-size: 2rem; color: var(--roxo);"></i>
+            <p class="mt-2 mb-0">Nenhum recebimento registrado.</p>
+        </div>
+    {% endif %}
+    
+    <div class="text-center mt-3">
+        <a href="/dashboard/financeiro" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
+    </div>
+</div>
+{% endblock %}

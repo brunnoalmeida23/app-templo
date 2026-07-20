@@ -42,7 +42,8 @@ class Mensalidade(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False)
     mes_ano = db.Column(db.String(7), nullable=False)
-    pago = db.Column(db.Boolean, default=False)
+    status = db.Column(db.String(20), default='pendente')
+    observacao = db.Column(db.String(200), nullable=True)
     data_pagamento = db.Column(db.DateTime, nullable=True)
 
 class Publicacao(db.Model):
@@ -211,22 +212,33 @@ def mensalidades():
     
     if request.method == 'POST':
         for membro in membros:
-            pago = request.form.get(f'pago_{membro.id}') == 'on'
+            novo_status = request.form.get(f'status_{membro.id}', 'pendente')
+            obs = request.form.get(f'obs_{membro.id}', '')
             mensalidade = Mensalidade.query.filter_by(usuario_id=membro.id, mes_ano=mes_atual).first()
-            if pago and not mensalidade:
-                nova = Mensalidade(usuario_id=membro.id, mes_ano=mes_atual, pago=True, data_pagamento=datetime.utcnow())
-                db.session.add(nova)
-            elif not pago and mensalidade:
-                db.session.delete(mensalidade)
+            
+            if novo_status == 'pendente':
+                if mensalidade:
+                    db.session.delete(mensalidade)
+            else:
+                if not mensalidade:
+                    mensalidade = Mensalidade(usuario_id=membro.id, mes_ano=mes_atual)
+                    db.session.add(mensalidade)
+                mensalidade.status = novo_status
+                mensalidade.observacao = obs if novo_status == 'acordo' else None
+                if novo_status == 'pago':
+                    mensalidade.data_pagamento = datetime.utcnow()
         db.session.commit()
         flash('✅ Mensalidades atualizadas!')
         return redirect(url_for('mensalidades'))
     
-    pagos = {}
+    status_list = {}
+    obs_list = {}
     for m in membros:
-        pagos[m.id] = Mensalidade.query.filter_by(usuario_id=m.id, mes_ano=mes_atual, pago=True).first() is not None
+        msg = Mensalidade.query.filter_by(usuario_id=m.id, mes_ano=mes_atual).first()
+        status_list[m.id] = msg.status if msg else 'pendente'
+        obs_list[m.id] = msg.observacao if msg else ''
     
-    return render_template('area_membros/mensalidades.html', membros=membros, pagos=pagos, mes_atual=mes_atual)
+    return render_template('area_membros/mensalidades.html', membros=membros, status_list=status_list, obs_list=obs_list, mes_atual=mes_atual)
 
 @app.route('/admin/enviar-cobranca')
 def enviar_cobranca():
@@ -244,14 +256,15 @@ def enviar_cobranca():
     membros = Usuario.query.filter_by(ativo=True).all()
     pendentes = []
     for m in membros:
-        if not Mensalidade.query.filter_by(usuario_id=m.id, mes_ano=mes_atual, pago=True).first():
+        msg = Mensalidade.query.filter_by(usuario_id=m.id, mes_ano=mes_atual).first()
+        if not msg or msg.status == 'pendente':
             pendentes.append(m.nome)
     
     if pendentes:
         enviar_notificacao("💰 Mensalidade em Aberto - TUPBAO", "Favor entrar em contato com a tesouraria.")
         flash(f'✅ Cobrança enviada! {len(pendentes)} membros pendentes.')
     else:
-        flash('✅ Todos estão em dia!')
+        flash('✅ Todos estão em dia ou com acordo!')
     
     return redirect(url_for('mensalidades'))
 

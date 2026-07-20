@@ -32,7 +32,7 @@
                     <tr>
                         <th>Membro</th>
                         <th>Status</th>
-                        <th style="width: 100px;">Pago?</th>
+                        <th>Observação</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -40,14 +40,14 @@
                     <tr>
                         <td><strong>{{ m.nome }}</strong></td>
                         <td>
-                            {% if pagos[m.id] %}
-                            <span class="badge bg-success">✅ Pago</span>
-                            {% else %}
-                            <span class="badge bg-warning text-dark">⏳ Pendente</span>
-                            {% endif %}
+                            <select name="status_{{ m.id }}" class="form-select form-select-sm" style="min-width: 130px;">
+                                <option value="pendente" {% if status_list[m.id] == 'pendente' %}selected{% endif %}>⏳ Pendente</option>
+                                <option value="acordo" {% if status_list[m.id] == 'acordo' %}selected{% endif %}>🤝 Acordo</option>
+                                <option value="pago" {% if status_list[m.id] == 'pago' %}selected{% endif %}>✅ Pago</option>
+                            </select>
                         </td>
-                        <td class="text-center">
-                            <input type="checkbox" name="pago_{{ m.id }}" class="form-check-input" {% if pagos[m.id] %}checked{% endif %}>
+                        <td>
+                            <input type="text" name="obs_{{ m.id }}" class="form-control form-control-sm" placeholder="Ex: Pagar dia 25" value="{{ obs_list[m.id] if obs_list[m.id] else '' }}" style="min-width: 150px;">
                         </td>
                     </tr>
                     {% endfor %}

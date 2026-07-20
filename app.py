@@ -75,7 +75,6 @@ def pode_gerenciar_tesouraria():
     return session.get('user_nome') in ['Flavia', 'Lilian', 'Roberto', 'Dirigente']
 
 def enviar_notificacao(titulo, mensagem):
-    """Envia notificação push via OneSignal usando variáveis de ambiente"""
     try:
         onesignal_app_id = os.environ.get('ONESIGNAL_APP_ID', '')
         onesignal_api_key = os.environ.get('ONESIGNAL_API_KEY', '')
@@ -126,7 +125,7 @@ def login():
         user = Usuario.query.filter_by(email=email).first()
         if user and check_password_hash(user.senha, senha):
             if not user.ativo:
-                flash('Usuário bloqueado. Entre em contato com o dirigente.')
+                flash('Usuário bloqueado.')
                 return render_template('login.html')
             session['user_id'] = user.id
             session['user_nome'] = user.nome
@@ -154,15 +153,12 @@ def logout():
 def dashboard():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
     lidos = [al.publicacao_id for al in AvisoLido.query.filter_by(usuario_id=session['user_id']).all()]
     avisos = Publicacao.query.filter_by(tipo='aviso').order_by(Publicacao.data_publicacao.desc()).all()
-    
     novos_avisos = 0
     for aviso in avisos:
         if aviso.id not in lidos:
             novos_avisos += 1
-    
     return render_template('area_membros/dashboard.html', avisos=avisos, novos_avisos=novos_avisos)
 
 @app.route('/dashboard/avisos')
@@ -190,12 +186,20 @@ def ver_limpezas():
     limpezas = Publicacao.query.filter_by(tipo='limpeza').order_by(Publicacao.data_publicacao.desc()).all()
     return render_template('area_membros/limpezas.html', limpezas=limpezas)
 
+# ============ FINANCEIRO ============
+
 @app.route('/dashboard/financeiro')
-def ver_financeiro():
+def financeiro_dash():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    return render_template('area_membros/financeiro.html')
+
+@app.route('/dashboard/financeiro/publicacoes')
+def ver_financeiro_publicacoes():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     financeiro = Publicacao.query.filter_by(tipo='financeiro').order_by(Publicacao.data_publicacao.desc()).all()
-    return render_template('area_membros/financeiro.html', financeiro=financeiro)
+    return render_template('area_membros/financeiro_publicacoes.html', financeiro=financeiro)
 
 # ============ TESOURARIA - MENSALIDADES ============
 
@@ -208,14 +212,14 @@ def mensalidades():
         return redirect(url_for('dashboard'))
     
     mes_atual = datetime.utcnow().strftime('%m/%Y')
-    membros = Usuario.query.filter_by(ativo=True).order_by(Usuario.nome).all()
+    isentos = ['Roberto', 'Thais', 'Rafael', 'Vera', 'Flavia', 'Marlon', 'Dirigente']
+    membros = Usuario.query.filter_by(ativo=True).filter(Usuario.nome.notin_(isentos)).order_by(Usuario.nome).all()
     
     if request.method == 'POST':
         for membro in membros:
             novo_status = request.form.get(f'status_{membro.id}', 'pendente')
             obs = request.form.get(f'obs_{membro.id}', '')
             mensalidade = Mensalidade.query.filter_by(usuario_id=membro.id, mes_ano=mes_atual).first()
-            
             if novo_status == 'pendente':
                 if mensalidade:
                     db.session.delete(mensalidade)
@@ -248,12 +252,12 @@ def enviar_cobranca():
     
     mes_atual = datetime.utcnow().strftime('%m/%Y')
     dia = datetime.utcnow().day
-    
     if dia < 10:
         flash('Só pode enviar cobrança a partir do dia 10.')
         return redirect(url_for('mensalidades'))
     
-    membros = Usuario.query.filter_by(ativo=True).all()
+    isentos = ['Roberto', 'Thais', 'Rafael', 'Vera', 'Flavia', 'Marlon', 'Dirigente']
+    membros = Usuario.query.filter_by(ativo=True).filter(Usuario.nome.notin_(isentos)).all()
     pendentes = []
     for m in membros:
         msg = Mensalidade.query.filter_by(usuario_id=m.id, mes_ano=mes_atual).first()
@@ -265,7 +269,6 @@ def enviar_cobranca():
         flash(f'✅ Cobrança enviada! {len(pendentes)} membros pendentes.')
     else:
         flash('✅ Todos estão em dia ou com acordo!')
-    
     return redirect(url_for('mensalidades'))
 
 # ============ CHECK-IN LIMPEZA ============
@@ -275,7 +278,6 @@ def checkin_limpeza():
     if 'user_id' not in session:
         session['next_page'] = '/checkin/limpeza'
         return redirect(url_for('login'))
-    
     grupos = [
         {'nome': 'Grupo 1', 'periodo': '29/06 a 04/07'},
         {'nome': 'Grupo 2', 'periodo': '22/06 a 27/06'},
@@ -284,21 +286,14 @@ def checkin_limpeza():
         {'nome': 'Grupo 5', 'periodo': '20/07 a 25/07'},
         {'nome': 'Grupo 6', 'periodo': '27/07 a 01/08'},
     ]
-    
     if request.method == 'POST':
         grupo_nome = request.form['grupo']
         grupo_periodo = request.form['periodo']
-        checkin = CheckinLimpeza(
-            usuario_id=session['user_id'],
-            usuario_nome=session['user_nome'],
-            grupo=grupo_nome,
-            periodo=grupo_periodo
-        )
+        checkin = CheckinLimpeza(usuario_id=session['user_id'], usuario_nome=session['user_nome'], grupo=grupo_nome, periodo=grupo_periodo)
         db.session.add(checkin)
         db.session.commit()
         flash(f'✅ Limpeza do {grupo_nome} confirmada! Axé!')
         return redirect(url_for('dashboard'))
-    
     return render_template('checkin_limpeza.html', grupos=grupos)
 
 @app.route('/admin/limpezas/excluir/<int:id>')
@@ -317,16 +312,13 @@ def historico_limpezas():
     if 'user_id' not in session or not pode_gerenciar():
         flash('Acesso restrito.')
         return redirect(url_for('dashboard'))
-    
     checkins = CheckinLimpeza.query.order_by(CheckinLimpeza.data_checkin.desc()).all()
-    
     meses = {}
     for c in checkins:
         chave = c.data_checkin.strftime('%m/%Y') if c.data_checkin else 'Sem data'
         if chave not in meses:
             meses[chave] = []
         meses[chave].append(c)
-    
     return render_template('admin/historico_limpezas.html', meses=meses)
 
 # ============ ADMIN ============
@@ -367,12 +359,7 @@ def cadastrar_publicacao():
                 data_evento = datetime.strptime(data_evento_str, '%Y-%m-%dT%H:%M')
             except:
                 pass
-        nova = Publicacao(
-            titulo=titulo,
-            conteudo=conteudo,
-            tipo=tipo,
-            data_evento=data_evento
-        )
+        nova = Publicacao(titulo=titulo, conteudo=conteudo, tipo=tipo, data_evento=data_evento)
         db.session.add(nova)
         db.session.commit()
         flash(f'✅ {tipo.capitalize()} cadastrado(a) com sucesso!')
@@ -458,13 +445,7 @@ def cadastrar_usuario():
         if Usuario.query.filter_by(email=email).first():
             flash('E-mail já cadastrado.')
         else:
-            novo = Usuario(
-                nome=nome,
-                email=email,
-                senha=generate_password_hash(senha),
-                funcao=funcao,
-                is_admin=(funcao in ['super_admin', 'admin'])
-            )
+            novo = Usuario(nome=nome, email=email, senha=generate_password_hash(senha), funcao=funcao, is_admin=(funcao in ['super_admin', 'admin']))
             db.session.add(novo)
             db.session.commit()
             flash(f'✅ Usuário {nome} cadastrado como {funcao}!')
@@ -565,13 +546,7 @@ def resetar_banco():
 
 def criar_admin_inicial():
     if not Usuario.query.filter_by(email='admin@templo.com').first():
-        admin = Usuario(
-            nome='Dirigente',
-            email='admin@templo.com',
-            senha=generate_password_hash('mudar123'),
-            is_admin=True,
-            funcao='super_admin'
-        )
+        admin = Usuario(nome='Dirigente', email='admin@templo.com', senha=generate_password_hash('mudar123'), is_admin=True, funcao='super_admin')
         db.session.add(admin)
         db.session.commit()
         print("✅ Super Admin criado: admin@templo.com / mudar123")

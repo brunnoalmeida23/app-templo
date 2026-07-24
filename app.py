@@ -100,7 +100,7 @@ def enviar_notificacao(titulo, mensagem):
 @app.route('/')
 def index():
     giras = Publicacao.query.filter_by(tipo='gira').order_by(Publicacao.data_evento.asc()).limit(5).all()
-    projetos = Publicacao.query.filter_by(tipo='projeto').order_by(Publicacao.data_publicacao.desc()).limit(3).all()
+    projetos = Publicacao.query.filter_by(tipo='projeto').order_by(Publicacao.data_evento.asc()).limit(3).all()
     return render_template('index.html', giras=giras, projetos=projetos)
 
 @app.route('/agenda')

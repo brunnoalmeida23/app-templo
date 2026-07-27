@@ -99,13 +99,17 @@ def enviar_notificacao(titulo, mensagem):
 
 @app.route('/')
 def index():
-    giras = Publicacao.query.filter_by(tipo='gira').order_by(Publicacao.data_evento.asc()).limit(5).all()
-    projetos = Publicacao.query.filter_by(tipo='projeto').order_by(Publicacao.data_publicacao.desc()).limit(3).all()
+    giras = Publicacao.query.filter_by(tipo='gira')\
+        .filter(Publicacao.data_evento >= datetime.utcnow())\
+        .order_by(Publicacao.data_evento.asc()).limit(5).all()
+    projetos = Publicacao.query.filter_by(tipo='projeto').order_by(Publicacao.data_evento.asc()).limit(3).all()
     return render_template('index.html', giras=giras, projetos=projetos)
 
 @app.route('/agenda')
 def agenda():
-    giras = Publicacao.query.filter_by(tipo='gira').order_by(Publicacao.data_evento.asc()).all()
+    giras = Publicacao.query.filter_by(tipo='gira')\
+        .filter(Publicacao.data_evento >= datetime.utcnow())\
+        .order_by(Publicacao.data_evento.asc()).all()
     return render_template('agenda.html', giras=giras)
 
 @app.route('/projetos')
@@ -201,6 +205,30 @@ def ver_financeiro_publicacoes():
     financeiro = Publicacao.query.filter_by(tipo='financeiro').order_by(Publicacao.data_publicacao.desc()).all()
     return render_template('area_membros/financeiro_publicacoes.html', financeiro=financeiro)
 
+@app.route('/dashboard/financeiro/contas')
+def ver_contas():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    mes_selecionado = request.args.get('mes', datetime.utcnow().strftime('%m/%Y'))
+    publicacoes = Publicacao.query.filter_by(tipo='conta').order_by(Publicacao.data_publicacao.desc()).all()
+    resultado = [p for p in publicacoes if p.data_publicacao.strftime('%m/%Y') == mes_selecionado]
+    meses_disponiveis = sorted(set(p.data_publicacao.strftime('%m/%Y') for p in publicacoes), reverse=True)
+    if not meses_disponiveis:
+        meses_disponiveis = [datetime.utcnow().strftime('%m/%Y')]
+    return render_template('area_membros/financeiro_contas.html', publicacoes=resultado, mes_selecionado=mes_selecionado, meses_disponiveis=meses_disponiveis)
+
+@app.route('/dashboard/financeiro/recebimentos')
+def ver_recebimentos():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    mes_selecionado = request.args.get('mes', datetime.utcnow().strftime('%m/%Y'))
+    publicacoes = Publicacao.query.filter_by(tipo='recebimento').order_by(Publicacao.data_publicacao.desc()).all()
+    resultado = [p for p in publicacoes if p.data_publicacao.strftime('%m/%Y') == mes_selecionado]
+    meses_disponiveis = sorted(set(p.data_publicacao.strftime('%m/%Y') for p in publicacoes), reverse=True)
+    if not meses_disponiveis:
+        meses_disponiveis = [datetime.utcnow().strftime('%m/%Y')]
+    return render_template('area_membros/financeiro_recebimentos.html', publicacoes=resultado, mes_selecionado=mes_selecionado, meses_disponiveis=meses_disponiveis)
+
 # ============ TESOURARIA - MENSALIDADES ============
 
 @app.route('/dashboard/mensalidades', methods=['GET', 'POST'])
@@ -212,7 +240,7 @@ def mensalidades():
         return redirect(url_for('dashboard'))
     
     mes_atual = datetime.utcnow().strftime('%m/%Y')
-    isentos = ['Roberto', 'Thais', 'Rafael', 'Vera', 'Flavia', 'Marlon', 'Dirigente']
+    isentos = ['Roberto', 'Thais', 'Rafael', 'Vera', 'Flavia', 'Marlon', 'Dirigente', 'Super-Admin']
     membros = Usuario.query.filter_by(ativo=True).filter(Usuario.nome.notin_(isentos)).order_by(Usuario.nome).all()
     
     if request.method == 'POST':
@@ -256,7 +284,7 @@ def enviar_cobranca():
         flash('Só pode enviar cobrança a partir do dia 10.')
         return redirect(url_for('mensalidades'))
     
-    isentos = ['Roberto', 'Thais', 'Rafael', 'Vera', 'Flavia', 'Marlon', 'Dirigente']
+    isentos = ['Roberto', 'Thais', 'Rafael', 'Vera', 'Flavia', 'Marlon', 'Dirigente', 'Super-Admin']
     membros = Usuario.query.filter_by(ativo=True).filter(Usuario.nome.notin_(isentos)).all()
     pendentes = []
     for m in membros:
@@ -371,7 +399,7 @@ def cadastrar_publicacao():
     funcao = session.get('funcao', 'membro')
     tipos_disponiveis = []
     if funcao in ['super_admin', 'admin']:
-        tipos_disponiveis = ['gira', 'aviso', 'projeto', 'limpeza', 'financeiro', 'noticia']
+        tipos_disponiveis = ['gira', 'aviso', 'projeto', 'limpeza', 'financeiro', 'noticia', 'conta', 'recebimento']
     elif funcao == 'tesouraria':
         tipos_disponiveis = ['financeiro']
     elif funcao == 'limpezas':

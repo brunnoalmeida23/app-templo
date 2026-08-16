@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Minhas Mensalidades - TUPBAO{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="titulo-secao"><i class="bi bi-credit-card"></i> Minhas Mensalidades - {{ ano_atual }}</h2>
+    <hr class="linha-ambar-left">
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="table-responsive">
+        <table class="table table-hover bg-white shadow-sm rounded">
+            <thead style="background-color: var(--roxo); color: white;">
+                <tr>
+                    <th>Mês</th>
+                    <th>Meu Comprovante</th>
+                    <th>Tesouraria</th>
+                    <th>Observação</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in historico %}
+                <tr>
+                    <td><strong>{{ item.mes_ano }}</strong></td>
+                    <td>
+                        {% if item.comprovante == 'pendente' %}
+                        <span class="badge bg-warning text-dark">📄 Enviado</span>
+                        {% elif item.status == 'pago' %}
+                        <span class="badge bg-success">✅ Enviado</span>
+                        {% else %}
+                        <span class="badge bg-secondary">⏳ Pendente</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if item.status == 'pago' %}
+                        <span class="badge bg-success">✅ Confirmado</span>
+                        {% elif item.status == 'acordo' %}
+                        <span class="badge bg-info">🤝 Acordo</span>
+                        {% elif item.comprovante == 'pendente' %}
+                        <span class="badge bg-warning text-dark">⏳ Em análise</span>
+                        {% else %}
+                        <span class="badge bg-secondary">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if item.observacao %}
+                        <small>{{ item.observacao }}</small>
+                        {% else %}
+                        <small class="text-muted">—</small>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mt-4">
+        <h4>Enviar Comprovante</h4>
+        <form action="/upload-comprovante" method="POST" enctype="multipart/form-data" class="card shadow p-4">
+            <div class="mb-3">
+                <label class="form-label">Anexar comprovante do mês atual (PDF ou imagem)</label>
+                <input type="file" name="arquivo" class="form-control" accept=".pdf,.jpg,.jpeg,.png" required>
+            </div>
+            <button type="submit" class="btn btn-ambar"><i class="bi bi-upload"></i> Enviar Comprovante</button>
+        </form>
+    </div>
+
+    <div class="mt-3">
+        <a href="/dashboard" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
+    </div>
+</div>
+{% endblock %}

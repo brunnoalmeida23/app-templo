@@ -46,6 +46,14 @@ class Mensalidade(db.Model):
     observacao = db.Column(db.String(200), nullable=True)
     data_pagamento = db.Column(db.DateTime, nullable=True)
 
+class Comprovante(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False)
+    mes_ano = db.Column(db.String(7), nullable=False)
+    arquivo = db.Column(db.String(200), nullable=False)
+    status = db.Column(db.String(20), default='pendente')
+    data_envio = db.Column(db.DateTime, default=datetime.utcnow)
+
 class Publicacao(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     titulo = db.Column(db.String(200), nullable=False)
@@ -81,16 +89,8 @@ def enviar_notificacao(titulo, mensagem):
         if not onesignal_app_id or not onesignal_api_key:
             return
         url = "https://onesignal.com/api/v1/notifications"
-        headers = {
-            "Authorization": f"Bearer {onesignal_api_key}",
-            "Content-Type": "application/json"
-        }
-        data = {
-            "app_id": onesignal_app_id,
-            "headings": {"en": titulo},
-            "contents": {"en": mensagem},
-            "included_segments": ["Active Subscriptions"]
-        }
+        headers = {"Authorization": f"Bearer {onesignal_api_key}", "Content-Type": "application/json"}
+        data = {"app_id": onesignal_app_id, "headings": {"en": titulo}, "contents": {"en": mensagem}, "included_segments": ["Active Subscriptions"]}
         requests.post(url, json=data, headers=headers)
     except:
         pass
@@ -102,7 +102,9 @@ def index():
     giras = Publicacao.query.filter_by(tipo='gira')\
         .filter(Publicacao.data_evento >= datetime.utcnow())\
         .order_by(Publicacao.data_evento.asc()).limit(5).all()
-    projetos = Publicacao.query.filter_by(tipo='projeto').order_by(Publicacao.data_evento.asc()).limit(3).all()
+    projetos = Publicacao.query.filter_by(tipo='projeto')\
+        .filter(Publicacao.data_evento >= datetime.utcnow())\
+        .order_by(Publicacao.data_evento.asc()).limit(3).all()
     return render_template('index.html', giras=giras, projetos=projetos)
 
 @app.route('/agenda')
@@ -114,7 +116,9 @@ def agenda():
 
 @app.route('/projetos')
 def projetos():
-    projetos = Publicacao.query.filter_by(tipo='projeto').order_by(Publicacao.data_publicacao.desc()).all()
+    projetos = Publicacao.query.filter_by(tipo='projeto')\
+        .filter(Publicacao.data_evento >= datetime.utcnow())\
+        .order_by(Publicacao.data_evento.asc()).all()
     return render_template('projetos.html', projetos=projetos)
 
 @app.route('/guia')
@@ -190,6 +194,49 @@ def ver_limpezas():
     limpezas = Publicacao.query.filter_by(tipo='limpeza').order_by(Publicacao.data_publicacao.desc()).all()
     return render_template('area_membros/limpezas.html', limpezas=limpezas)
 
+@app.route('/minha-mensalidade')
+def minha_mensalidade():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    ano_atual = datetime.utcnow().year
+    meses_lista = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
+    historico = []
+    for mes in meses_lista:
+        mes_ano = f"{mes}/{ano_atual}"
+        mensalidade = Mensalidade.query.filter_by(usuario_id=session['user_id'], mes_ano=mes_ano).first()
+        comprovante = Comprovante.query.filter_by(usuario_id=session['user_id'], mes_ano=mes_ano).first()
+        historico.append({
+            'mes': mes,
+            'mes_ano': mes_ano,
+            'status': mensalidade.status if mensalidade else 'pendente',
+            'observacao': mensalidade.observacao if mensalidade else '',
+            'comprovante': comprovante.status if comprovante else None
+        })
+    return render_template('area_membros/minha_mensalidade.html', historico=historico, ano_atual=ano_atual)
+
+@app.route('/upload-comprovante', methods=['POST'])
+def upload_comprovante():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    if 'arquivo' not in request.files:
+        flash('Nenhum arquivo enviado.')
+        return redirect(url_for('minha_mensalidade'))
+    arquivo = request.files['arquivo']
+    if arquivo.filename == '':
+        flash('Nenhum arquivo selecionado.')
+        return redirect(url_for('minha_mensalidade'))
+    mes_atual = datetime.utcnow().strftime('%m/%Y')
+    nome_arquivo = f"{session['user_id']}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{arquivo.filename}"
+    caminho = os.path.join('static', 'uploads', nome_arquivo)
+    os.makedirs(os.path.dirname(caminho), exist_ok=True)
+    arquivo.save(caminho)
+    novo = Comprovante(usuario_id=session['user_id'], mes_ano=mes_atual, arquivo=nome_arquivo)
+    db.session.add(novo)
+    db.session.commit()
+    enviar_notificacao("📄 Novo Comprovante - TUPBAO", f"{session['user_nome']} enviou comprovante de mensalidade.")
+    flash('✅ Comprovante enviado! Aguarde a confirmação da tesouraria.')
+    return redirect(url_for('minha_mensalidade'))
+
 # ============ FINANCEIRO ============
 
 @app.route('/dashboard/financeiro')
@@ -238,114 +285,84 @@ def mensalidades():
     if not pode_gerenciar_tesouraria():
         flash('Acesso restrito à tesouraria.')
         return redirect(url_for('dashboard'))
-    
     mes_atual = datetime.utcnow().strftime('%m/%Y')
     isentos = ['Roberto', 'Thais', 'Rafael', 'Vera', 'Flavia', 'Marlon', 'Dirigente', 'Super-Admin']
     membros = Usuario.query.filter_by(ativo=True).filter(Usuario.nome.notin_(isentos)).order_by(Usuario.nome).all()
-    
     if request.method == 'POST':
         for membro in membros:
             novo_status = request.form.get(f'status_{membro.id}', 'pendente')
             obs = request.form.get(f'obs_{membro.id}', '')
             mensalidade = Mensalidade.query.filter_by(usuario_id=membro.id, mes_ano=mes_atual).first()
             if novo_status == 'pendente':
-                if mensalidade:
-                    db.session.delete(mensalidade)
+                if mensalidade: db.session.delete(mensalidade)
             else:
                 if not mensalidade:
                     mensalidade = Mensalidade(usuario_id=membro.id, mes_ano=mes_atual)
                     db.session.add(mensalidade)
                 mensalidade.status = novo_status
                 mensalidade.observacao = obs if novo_status == 'acordo' else None
-                if novo_status == 'pago':
-                    mensalidade.data_pagamento = datetime.utcnow()
+                if novo_status == 'pago': mensalidade.data_pagamento = datetime.utcnow()
         db.session.commit()
         flash('✅ Mensalidades atualizadas!')
         return redirect(url_for('mensalidades'))
-    
     status_list = {}
     obs_list = {}
     for m in membros:
         msg = Mensalidade.query.filter_by(usuario_id=m.id, mes_ano=mes_atual).first()
         status_list[m.id] = msg.status if msg else 'pendente'
         obs_list[m.id] = msg.observacao if msg else ''
-    
     return render_template('area_membros/mensalidades.html', membros=membros, status_list=status_list, obs_list=obs_list, mes_atual=mes_atual)
 
 @app.route('/admin/enviar-cobranca')
 def enviar_cobranca():
-    if not pode_gerenciar_tesouraria():
-        flash('Acesso restrito à tesouraria.')
-        return redirect(url_for('dashboard'))
-    
+    if not pode_gerenciar_tesouraria(): flash('Acesso restrito à tesouraria.'); return redirect(url_for('dashboard'))
     mes_atual = datetime.utcnow().strftime('%m/%Y')
     dia = datetime.utcnow().day
-    if dia < 10:
-        flash('Só pode enviar cobrança a partir do dia 10.')
-        return redirect(url_for('mensalidades'))
-    
+    if dia < 10: flash('Só pode enviar cobrança a partir do dia 10.'); return redirect(url_for('mensalidades'))
     isentos = ['Roberto', 'Thais', 'Rafael', 'Vera', 'Flavia', 'Marlon', 'Dirigente', 'Super-Admin']
     membros = Usuario.query.filter_by(ativo=True).filter(Usuario.nome.notin_(isentos)).all()
     pendentes = []
     for m in membros:
         msg = Mensalidade.query.filter_by(usuario_id=m.id, mes_ano=mes_atual).first()
-        if not msg or msg.status == 'pendente':
-            pendentes.append(m.nome)
-    
+        if not msg or msg.status == 'pendente': pendentes.append(m.nome)
     if pendentes:
         enviar_notificacao("💰 Mensalidade em Aberto - TUPBAO", "Favor entrar em contato com a tesouraria.")
         flash(f'✅ Cobrança enviada! {len(pendentes)} membros pendentes.')
-    else:
-        flash('✅ Todos estão em dia ou com acordo!')
+    else: flash('✅ Todos estão em dia ou com acordo!')
     return redirect(url_for('mensalidades'))
 
 # ============ CHECK-IN LIMPEZA ============
 
 @app.route('/checkin/limpeza', methods=['GET', 'POST'])
 def checkin_limpeza():
-    if 'user_id' not in session:
-        session['next_page'] = '/checkin/limpeza'
-        return redirect(url_for('login'))
+    if 'user_id' not in session: session['next_page'] = '/checkin/limpeza'; return redirect(url_for('login'))
     grupos = [
-        {'nome': 'Grupo 1', 'periodo': '29/06 a 04/07'},
-        {'nome': 'Grupo 2', 'periodo': '22/06 a 27/06'},
-        {'nome': 'Grupo 3', 'periodo': '06/07 a 11/07'},
-        {'nome': 'Grupo 4', 'periodo': '13/07 a 18/07'},
-        {'nome': 'Grupo 5', 'periodo': '20/07 a 25/07'},
-        {'nome': 'Grupo 6', 'periodo': '27/07 a 01/08'},
+        {'nome': 'Grupo 1', 'periodo': '29/06 a 04/07'}, {'nome': 'Grupo 2', 'periodo': '22/06 a 27/06'},
+        {'nome': 'Grupo 3', 'periodo': '06/07 a 11/07'}, {'nome': 'Grupo 4', 'periodo': '13/07 a 18/07'},
+        {'nome': 'Grupo 5', 'periodo': '20/07 a 25/07'}, {'nome': 'Grupo 6', 'periodo': '27/07 a 01/08'},
     ]
     if request.method == 'POST':
-        grupo_nome = request.form['grupo']
-        grupo_periodo = request.form['periodo']
+        grupo_nome = request.form['grupo']; grupo_periodo = request.form['periodo']
         checkin = CheckinLimpeza(usuario_id=session['user_id'], usuario_nome=session['user_nome'], grupo=grupo_nome, periodo=grupo_periodo)
-        db.session.add(checkin)
-        db.session.commit()
+        db.session.add(checkin); db.session.commit()
         flash(f'✅ Limpeza do {grupo_nome} confirmada! Axé!')
         return redirect(url_for('dashboard'))
     return render_template('checkin_limpeza.html', grupos=grupos)
 
 @app.route('/admin/limpezas/excluir/<int:id>')
 def excluir_checkin(id):
-    if 'user_id' not in session or not pode_gerenciar():
-        flash('Acesso restrito.')
-        return redirect(url_for('dashboard'))
-    checkin = CheckinLimpeza.query.get_or_404(id)
-    db.session.delete(checkin)
-    db.session.commit()
-    flash('🗑️ Check-in excluído.')
-    return redirect(url_for('historico_limpezas'))
+    if 'user_id' not in session or not pode_gerenciar(): flash('Acesso restrito.'); return redirect(url_for('dashboard'))
+    checkin = CheckinLimpeza.query.get_or_404(id); db.session.delete(checkin); db.session.commit()
+    flash('🗑️ Check-in excluído.'); return redirect(url_for('historico_limpezas'))
 
 @app.route('/admin/limpezas/historico')
 def historico_limpezas():
-    if 'user_id' not in session or not pode_gerenciar():
-        flash('Acesso restrito.')
-        return redirect(url_for('dashboard'))
+    if 'user_id' not in session or not pode_gerenciar(): flash('Acesso restrito.'); return redirect(url_for('dashboard'))
     checkins = CheckinLimpeza.query.order_by(CheckinLimpeza.data_checkin.desc()).all()
     meses = {}
     for c in checkins:
         chave = c.data_checkin.strftime('%m/%Y') if c.data_checkin else 'Sem data'
-        if chave not in meses:
-            meses[chave] = []
+        if chave not in meses: meses[chave] = []
         meses[chave].append(c)
     return render_template('admin/historico_limpezas.html', meses=meses)
 
@@ -353,230 +370,146 @@ def historico_limpezas():
 
 @app.route('/admin')
 def admin():
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
-    if not pode_gerenciar():
-        flash('Acesso restrito.')
-        return redirect(url_for('dashboard'))
-    if session.get('funcao') == 'tesouraria':
-        publicacoes = Publicacao.query.filter_by(tipo='financeiro').order_by(Publicacao.data_publicacao.desc()).all()
-    elif session.get('funcao') == 'limpezas':
-        publicacoes = Publicacao.query.filter_by(tipo='limpeza').order_by(Publicacao.data_publicacao.desc()).all()
-    else:
-        publicacoes = Publicacao.query.order_by(Publicacao.data_publicacao.desc()).all()
+    if 'user_id' not in session: return redirect(url_for('login'))
+    if not pode_gerenciar(): flash('Acesso restrito.'); return redirect(url_for('dashboard'))
+    if session.get('funcao') == 'tesouraria': publicacoes = Publicacao.query.filter_by(tipo='financeiro').order_by(Publicacao.data_publicacao.desc()).all()
+    elif session.get('funcao') == 'limpezas': publicacoes = Publicacao.query.filter_by(tipo='limpeza').order_by(Publicacao.data_publicacao.desc()).all()
+    else: publicacoes = Publicacao.query.order_by(Publicacao.data_publicacao.desc()).all()
     return render_template('admin/painel.html', publicacoes=publicacoes)
 
 @app.route('/admin/cadastrar', methods=['GET', 'POST'])
 def cadastrar_publicacao():
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
-    if not pode_gerenciar():
-        flash('Acesso restrito.')
-        return redirect(url_for('dashboard'))
+    if 'user_id' not in session: return redirect(url_for('login'))
+    if not pode_gerenciar(): flash('Acesso restrito.'); return redirect(url_for('dashboard'))
     if request.method == 'POST':
-        titulo = request.form['titulo']
-        conteudo = request.form['conteudo']
-        tipo = request.form['tipo']
-        if not pode_gerenciar(tipo):
-            flash('Você não tem permissão para este tipo de publicação.')
-            return redirect(url_for('admin'))
+        titulo = request.form['titulo']; conteudo = request.form['conteudo']; tipo = request.form['tipo']
+        if not pode_gerenciar(tipo): flash('Você não tem permissão para este tipo de publicação.'); return redirect(url_for('admin'))
         data_evento_str = request.form.get('data_evento', '')
         data_evento = None
         if data_evento_str:
-            try:
-                data_evento = datetime.strptime(data_evento_str, '%Y-%m-%dT%H:%M')
-            except:
-                pass
+            try: data_evento = datetime.strptime(data_evento_str, '%Y-%m-%dT%H:%M')
+            except: pass
         nova = Publicacao(titulo=titulo, conteudo=conteudo, tipo=tipo, data_evento=data_evento)
-        db.session.add(nova)
-        db.session.commit()
+        db.session.add(nova); db.session.commit()
         flash(f'✅ {tipo.capitalize()} cadastrado(a) com sucesso!')
-        if tipo == 'aviso':
-            enviar_notificacao("📢 Novo Aviso - TUPBAO", titulo)
-        if tipo == 'limpeza':
-            enviar_notificacao("🧹 Nova Limpeza - TUPBAO", titulo)
+        if tipo == 'aviso': enviar_notificacao("📢 Novo Aviso - TUPBAO", titulo)
+        if tipo == 'limpeza': enviar_notificacao("🧹 Nova Limpeza - TUPBAO", titulo)
         return redirect(url_for('admin'))
     funcao = session.get('funcao', 'membro')
     tipos_disponiveis = []
-    if funcao in ['super_admin', 'admin']:
-        tipos_disponiveis = ['gira', 'aviso', 'projeto', 'limpeza', 'financeiro', 'noticia', 'conta', 'recebimento']
-    elif funcao == 'tesouraria':
-        tipos_disponiveis = ['financeiro']
-    elif funcao == 'limpezas':
-        tipos_disponiveis = ['limpeza']
+    if funcao in ['super_admin', 'admin']: tipos_disponiveis = ['gira', 'aviso', 'projeto', 'limpeza', 'financeiro', 'noticia', 'conta', 'recebimento']
+    elif funcao == 'tesouraria': tipos_disponiveis = ['financeiro']
+    elif funcao == 'limpezas': tipos_disponiveis = ['limpeza']
     return render_template('admin/cadastrar.html', tipos_disponiveis=tipos_disponiveis)
 
 @app.route('/admin/editar/<int:id>', methods=['GET', 'POST'])
 def editar_publicacao(id):
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
+    if 'user_id' not in session: return redirect(url_for('login'))
     pub = Publicacao.query.get_or_404(id)
-    if not pode_gerenciar(pub.tipo):
-        flash('Acesso restrito.')
-        return redirect(url_for('dashboard'))
+    if not pode_gerenciar(pub.tipo): flash('Acesso restrito.'); return redirect(url_for('dashboard'))
     if request.method == 'POST':
-        pub.titulo = request.form['titulo']
-        pub.conteudo = request.form['conteudo']
-        novo_tipo = request.form['tipo']
-        if not pode_gerenciar(novo_tipo):
-            flash('Você não tem permissão para este tipo.')
-            return redirect(url_for('admin'))
+        pub.titulo = request.form['titulo']; pub.conteudo = request.form['conteudo']; novo_tipo = request.form['tipo']
+        if not pode_gerenciar(novo_tipo): flash('Você não tem permissão para este tipo.'); return redirect(url_for('admin'))
         pub.tipo = novo_tipo
         data_evento_str = request.form.get('data_evento', '')
         if data_evento_str:
-            try:
-                pub.data_evento = datetime.strptime(data_evento_str, '%Y-%m-%dT%H:%M')
-            except:
-                pub.data_evento = None
-        else:
-            pub.data_evento = None
+            try: pub.data_evento = datetime.strptime(data_evento_str, '%Y-%m-%dT%H:%M')
+            except: pub.data_evento = None
+        else: pub.data_evento = None
         db.session.commit()
         flash('✅ Publicação atualizada com sucesso!')
-        if pub.tipo == 'limpeza':
-            enviar_notificacao("🧹 Limpeza Atualizada - TUPBAO", pub.titulo)
+        if pub.tipo == 'limpeza': enviar_notificacao("🧹 Limpeza Atualizada - TUPBAO", pub.titulo)
         return redirect(url_for('admin'))
     return render_template('admin/editar.html', pub=pub)
 
 @app.route('/admin/excluir/<int:id>')
 def excluir_publicacao(id):
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
+    if 'user_id' not in session: return redirect(url_for('login'))
     pub = Publicacao.query.get_or_404(id)
-    if not pode_gerenciar(pub.tipo):
-        flash('Acesso restrito.')
-        return redirect(url_for('dashboard'))
-    db.session.delete(pub)
-    db.session.commit()
-    flash('🗑️ Publicação excluída.')
-    return redirect(url_for('admin'))
+    if not pode_gerenciar(pub.tipo): flash('Acesso restrito.'); return redirect(url_for('dashboard'))
+    db.session.delete(pub); db.session.commit()
+    flash('🗑️ Publicação excluída.'); return redirect(url_for('admin'))
 
 # ============ GERENCIAR USUÁRIOS ============
 
 @app.route('/admin/usuarios')
 def gerenciar_usuarios():
-    if not pode_gerenciar_usuarios():
-        flash('Acesso restrito ao Dirigente.')
-        return redirect(url_for('dashboard'))
+    if not pode_gerenciar_usuarios(): flash('Acesso restrito ao Dirigente.'); return redirect(url_for('dashboard'))
     usuarios = Usuario.query.all()
     return render_template('admin/usuarios.html', usuarios=usuarios)
 
 @app.route('/admin/usuarios/cadastrar', methods=['GET', 'POST'])
 def cadastrar_usuario():
-    if not pode_gerenciar_usuarios():
-        flash('Acesso restrito ao Dirigente.')
-        return redirect(url_for('dashboard'))
+    if not pode_gerenciar_usuarios(): flash('Acesso restrito ao Dirigente.'); return redirect(url_for('dashboard'))
     if request.method == 'POST':
-        nome = request.form['nome']
-        email = request.form['email']
-        senha = request.form['senha']
-        funcao = request.form['funcao']
-        if Usuario.query.filter_by(email=email).first():
-            flash('E-mail já cadastrado.')
+        nome = request.form['nome']; email = request.form['email']; senha = request.form['senha']; funcao = request.form['funcao']
+        if Usuario.query.filter_by(email=email).first(): flash('E-mail já cadastrado.')
         else:
             novo = Usuario(nome=nome, email=email, senha=generate_password_hash(senha), funcao=funcao, is_admin=(funcao in ['super_admin', 'admin']))
-            db.session.add(novo)
-            db.session.commit()
+            db.session.add(novo); db.session.commit()
             flash(f'✅ Usuário {nome} cadastrado como {funcao}!')
             return redirect(url_for('gerenciar_usuarios'))
     return render_template('admin/cadastrar_usuario.html')
 
 @app.route('/admin/usuarios/editar/<int:id>', methods=['GET', 'POST'])
 def editar_usuario(id):
-    if not pode_gerenciar_usuarios():
-        flash('Acesso restrito ao Dirigente.')
-        return redirect(url_for('dashboard'))
+    if not pode_gerenciar_usuarios(): flash('Acesso restrito ao Dirigente.'); return redirect(url_for('dashboard'))
     user = Usuario.query.get_or_404(id)
     if request.method == 'POST':
-        user.nome = request.form['nome']
-        user.funcao = request.form['funcao']
+        user.nome = request.form['nome']; user.funcao = request.form['funcao']
         user.is_admin = (request.form['funcao'] in ['super_admin', 'admin'])
-        if request.form.get('nova_senha'):
-            user.senha = generate_password_hash(request.form['nova_senha'])
-        db.session.commit()
-        flash('✅ Usuário atualizado!')
+        if request.form.get('nova_senha'): user.senha = generate_password_hash(request.form['nova_senha'])
+        db.session.commit(); flash('✅ Usuário atualizado!')
         return redirect(url_for('gerenciar_usuarios'))
     return render_template('admin/editar_usuario.html', usuario=user)
 
 @app.route('/admin/usuarios/excluir/<int:id>')
 def excluir_usuario(id):
-    if not pode_gerenciar_usuarios():
-        flash('Acesso restrito ao Dirigente.')
-        return redirect(url_for('dashboard'))
+    if not pode_gerenciar_usuarios(): flash('Acesso restrito ao Dirigente.'); return redirect(url_for('dashboard'))
     user = Usuario.query.get_or_404(id)
-    if user.email == 'admin@templo.com':
-        flash('Não é possível excluir o admin principal.')
-    else:
-        db.session.delete(user)
-        db.session.commit()
-        flash('🗑️ Usuário excluído.')
+    if user.email == 'admin@templo.com': flash('Não é possível excluir o admin principal.')
+    else: db.session.delete(user); db.session.commit(); flash('🗑️ Usuário excluído.')
     return redirect(url_for('gerenciar_usuarios'))
 
 @app.route('/admin/usuarios/bloquear/<int:id>')
 def bloquear_usuario(id):
-    if not pode_gerenciar_usuarios():
-        flash('Acesso restrito ao Dirigente.')
-        return redirect(url_for('dashboard'))
+    if not pode_gerenciar_usuarios(): flash('Acesso restrito ao Dirigente.'); return redirect(url_for('dashboard'))
     user = Usuario.query.get_or_404(id)
-    if user.email == 'admin@templo.com':
-        flash('Não é possível bloquear o admin principal.')
-    else:
-        user.ativo = False
-        db.session.commit()
-        flash(f'🔒 {user.nome} bloqueado.')
+    if user.email == 'admin@templo.com': flash('Não é possível bloquear o admin principal.')
+    else: user.ativo = False; db.session.commit(); flash(f'🔒 {user.nome} bloqueado.')
     return redirect(url_for('gerenciar_usuarios'))
 
 @app.route('/admin/usuarios/desbloquear/<int:id>')
 def desbloquear_usuario(id):
-    if not pode_gerenciar_usuarios():
-        flash('Acesso restrito ao Dirigente.')
-        return redirect(url_for('dashboard'))
-    user = Usuario.query.get_or_404(id)
-    user.ativo = True
-    db.session.commit()
-    flash(f'🔓 {user.nome} desbloqueado.')
-    return redirect(url_for('gerenciar_usuarios'))
+    if not pode_gerenciar_usuarios(): flash('Acesso restrito ao Dirigente.'); return redirect(url_for('dashboard'))
+    user = Usuario.query.get_or_404(id); user.ativo = True; db.session.commit()
+    flash(f'🔓 {user.nome} desbloqueado.'); return redirect(url_for('gerenciar_usuarios'))
 
 @app.route('/perfil', methods=['GET', 'POST'])
 def perfil():
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
+    if 'user_id' not in session: return redirect(url_for('login'))
     user = Usuario.query.get(session['user_id'])
     if request.method == 'POST':
-        senha_atual = request.form['senha_atual']
-        nova_senha = request.form['nova_senha']
-        confirmar_senha = request.form['confirmar_senha']
-        if not check_password_hash(user.senha, senha_atual):
-            flash('Senha atual incorreta.')
-        elif nova_senha != confirmar_senha:
-            flash('Nova senha e confirmação não conferem.')
-        elif len(nova_senha) < 6:
-            flash('A nova senha deve ter pelo menos 6 caracteres.')
-        else:
-            user.senha = generate_password_hash(nova_senha)
-            db.session.commit()
-            flash('✅ Senha alterada com sucesso!')
-            return redirect(url_for('dashboard'))
+        senha_atual = request.form['senha_atual']; nova_senha = request.form['nova_senha']; confirmar_senha = request.form['confirmar_senha']
+        if not check_password_hash(user.senha, senha_atual): flash('Senha atual incorreta.')
+        elif nova_senha != confirmar_senha: flash('Nova senha e confirmação não conferem.')
+        elif len(nova_senha) < 6: flash('A nova senha deve ter pelo menos 6 caracteres.')
+        else: user.senha = generate_password_hash(nova_senha); db.session.commit(); flash('✅ Senha alterada com sucesso!'); return redirect(url_for('dashboard'))
     return render_template('perfil.html')
 
 # ============ ROTA TEMPORÁRIA ============
 
 @app.route('/resetar-banco')
 def resetar_banco():
-    try:
-        db.drop_all()
-        db.create_all()
-        criar_admin_inicial()
-        return '✅ Banco resetado! Faça login com admin@templo.com / mudar123'
-    except Exception as e:
-        return f'Erro: {e}'
+    try: db.drop_all(); db.create_all(); criar_admin_inicial(); return '✅ Banco resetado! Faça login com admin@templo.com / mudar123'
+    except Exception as e: return f'Erro: {e}'
 
 # ============ INICIALIZAÇÃO ============
 
 def criar_admin_inicial():
     if not Usuario.query.filter_by(email='admin@templo.com').first():
         admin = Usuario(nome='Dirigente', email='admin@templo.com', senha=generate_password_hash('mudar123'), is_admin=True, funcao='super_admin')
-        db.session.add(admin)
-        db.session.commit()
+        db.session.add(admin); db.session.commit()
         print("✅ Super Admin criado: admin@templo.com / mudar123")
 
 _banco_inicializado = False
@@ -585,9 +518,7 @@ _banco_inicializado = False
 def inicializar_banco():
     global _banco_inicializado
     if not _banco_inicializado and request.path != '/resetar-banco':
-        db.create_all()
-        criar_admin_inicial()
-        _banco_inicializado = True
+        db.create_all(); criar_admin_inicial(); _banco_inicializado = True
 
 @app.route('/OneSignalSDKWorker.js')
 def serve_worker():

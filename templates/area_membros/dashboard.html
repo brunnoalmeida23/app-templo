@@ -66,7 +66,7 @@
             <a href="/checkin/limpeza" class="card card-dash shadow-sm p-3 text-center text-decoration-none text-dark">
                 <i class="bi bi-check2-circle" style="font-size: 2rem; color: var(--roxo);"></i>
                 <h5 class="mt-2">Confirmar Limpeza</h5>
-                <p class="text-muted small">Registrar presen&ccedil;a na limpeza</p>
+                <p class="text-muted small">Registrar presença na limpeza</p>
             </a>
         </div>
 
@@ -78,20 +78,32 @@
             </a>
         </div>
 
-        {% if session.is_admin %}
+        {% if session.funcao in ['super_admin', 'admin', 'tesouraria'] %}
         <div class="col-lg-4 col-md-6 mb-3">
             <a href="/dashboard/financeiro" class="card card-dash shadow-sm p-3 text-center text-decoration-none text-dark">
                 <i class="bi bi-cash-coin" style="font-size: 2rem; color: var(--roxo);"></i>
                 <h5 class="mt-2">💰 Financeiro</h5>
-                <p class="text-muted small">Transparência</p>
+                <p class="text-muted small">Transparência financeira</p>
             </a>
         </div>
+        {% endif %}
 
+        {% if session.funcao in ['super_admin', 'admin'] %}
         <div class="col-lg-4 col-md-6 mb-3">
-            <a href="/admin" class="card card-dash shadow-sm p-3 text-center text-decoration-none text-dark" style="border-top-color: var(--roxo);">
-                <i class="bi bi-gear" style="font-size: 2rem; color: var(--roxo);"></i>
-                <h5 class="mt-2">⚙️ Publicações</h5>
-                <p class="text-muted small">Gerenciar conteúdo</p>
+            <a href="/admin/cadastrar" class="card card-dash shadow-sm p-3 text-center text-decoration-none text-dark" style="border-top-color: var(--roxo);">
+                <i class="bi bi-plus-square" style="font-size: 2rem; color: var(--roxo);"></i>
+                <h5 class="mt-2">Nova Publicação</h5>
+                <p class="text-muted small">Publicar avisos, giras e conteúdos</p>
+            </a>
+        </div>
+        {% endif %}
+
+        {% if session.funcao == 'super_admin' %}
+        <div class="col-lg-4 col-md-6 mb-3">
+            <a href="/admin/usuarios" class="card card-dash shadow-sm p-3 text-center text-decoration-none text-dark" style="border-top-color: var(--roxo);">
+                <i class="bi bi-people" style="font-size: 2rem; color: var(--roxo);"></i>
+                <h5 class="mt-2">Gerenciar Usuários</h5>
+                <p class="text-muted small">Cadastros, funções e equipes</p>
             </a>
         </div>
         {% endif %}
@@ -126,7 +138,6 @@
 </div>
 
 <script>
-// Verificar se notificações estão bloqueadas
 if ('Notification' in window) {
     if (Notification.permission === 'denied') {
         document.getElementById('alertaNotificacoes').style.display = 'block';

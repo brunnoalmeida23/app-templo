@@ -443,12 +443,10 @@ def gerenciar_grupos_limpeza():
 
 @app.route('/admin')
 def admin():
-    if 'user_id' not in session: return redirect(url_for('login'))
-    if not pode_gerenciar(): flash('Acesso restrito.'); return redirect(url_for('dashboard'))
-    if session.get('funcao') == 'tesouraria': publicacoes = Publicacao.query.filter_by(tipo='financeiro').order_by(Publicacao.data_publicacao.desc()).all()
-    elif session.get('funcao') == 'limpezas': publicacoes = Publicacao.query.filter_by(tipo='limpeza').order_by(Publicacao.data_publicacao.desc()).all()
-    else: publicacoes = Publicacao.query.order_by(Publicacao.data_publicacao.desc()).all()
-    return render_template('admin/painel.html', publicacoes=publicacoes)
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    return redirect(url_for('dashboard'))
 
 @app.route('/admin/cadastrar', methods=['GET', 'POST'])
 def cadastrar_publicacao():

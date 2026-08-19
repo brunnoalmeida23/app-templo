@@ -24,6 +24,7 @@ class Usuario(db.Model):
     ultimo_acesso = db.Column(db.DateTime, nullable=True)
     ativo = db.Column(db.Boolean, default=True)
     grupo_limpeza = db.Column(db.Integer, nullable=True)
+    celular = db.Column(db.String(20), nullable=True)
 
 class AvisoLido(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -520,6 +521,7 @@ def cadastrar_usuario():
         email = request.form['email']
         senha = request.form['senha']
         funcao = request.form['funcao']
+        celular = ''.join(filter(str.isdigit, request.form.get('celular', '')))
 
         grupo_limpeza_raw = request.form.get('grupo_limpeza', '').strip()
         grupo_limpeza = int(grupo_limpeza_raw) if grupo_limpeza_raw in ['1', '2', '3', '4', '5', '6'] else None
@@ -533,7 +535,8 @@ def cadastrar_usuario():
                 senha=generate_password_hash(senha),
                 funcao=funcao,
                 is_admin=(funcao in ['super_admin', 'admin']),
-                grupo_limpeza=grupo_limpeza
+                grupo_limpeza=grupo_limpeza,
+                celular=celular if celular else None
             )
             db.session.add(novo)
             db.session.commit()
@@ -557,6 +560,9 @@ def editar_usuario(id):
 
         grupo_limpeza_raw = request.form.get('grupo_limpeza', '').strip()
         user.grupo_limpeza = int(grupo_limpeza_raw) if grupo_limpeza_raw in ['1', '2', '3', '4', '5', '6'] else None
+
+        celular = ''.join(filter(str.isdigit, request.form.get('celular', '')))
+        user.celular = celular if celular else None
 
         if request.form.get('nova_senha'):
             user.senha = generate_password_hash(request.form['nova_senha'])

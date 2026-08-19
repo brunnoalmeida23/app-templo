@@ -382,6 +382,63 @@ def historico_limpezas():
         meses[chave].append(c)
     return render_template('admin/historico_limpezas.html', meses=meses)
 
+
+@app.route('/admin/limpezas/grupos', methods=['GET', 'POST'])
+def gerenciar_grupos_limpeza():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    if not pode_gerenciar('limpeza'):
+        flash('Acesso restrito ao gerenciamento de limpezas.')
+        return redirect(url_for('dashboard'))
+
+    grupos_existentes = {
+        grupo.numero: grupo
+        for grupo in GrupoLimpeza.query.order_by(GrupoLimpeza.numero).all()
+    }
+
+    for numero in range(1, 7):
+        if numero not in grupos_existentes:
+            novo_grupo = GrupoLimpeza(
+                numero=numero,
+                periodo='',
+                confirmado=False
+            )
+            db.session.add(novo_grupo)
+
+    db.session.commit()
+
+    grupos = GrupoLimpeza.query.order_by(GrupoLimpeza.numero).all()
+
+    if request.method == 'POST':
+        alterou = False
+
+        for grupo in grupos:
+            novo_periodo = request.form.get(
+                f'periodo_{grupo.numero}', ''
+            ).strip()
+
+            if novo_periodo != (grupo.periodo or ''):
+                grupo.periodo = novo_periodo
+                grupo.confirmado = False
+                grupo.confirmado_por = None
+                grupo.data_confirmacao = None
+                alterou = True
+
+        if alterou:
+            db.session.commit()
+            flash('✅ Períodos das equipes atualizados com sucesso!')
+        else:
+            flash('Nenhuma alteração foi realizada.')
+
+        return redirect(url_for('gerenciar_grupos_limpeza'))
+
+    return render_template(
+        'admin/grupos_limpeza.html',
+        grupos=grupos
+    )
+
+
 # ============ ADMIN ============
 
 @app.route('/admin')

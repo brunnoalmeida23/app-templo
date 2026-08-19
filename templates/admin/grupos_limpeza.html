@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Períodos de Limpeza - TUPBAO{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <h2 class="titulo-secao mb-1">
+                <i class="bi bi-calendar-week"></i> Períodos das Equipes de Limpeza
+            </h2>
+            <p class="text-muted mb-0">
+                Altere somente os períodos. Ao mudar um período, a confirmação daquela equipe será reaberta automaticamente.
+            </p>
+        </div>
+
+        <a href="/admin" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+    </div>
+
+    <hr class="linha-ambar-left">
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+        <div class="row">
+            {% for grupo in grupos %}
+            <div class="col-lg-6 mb-3">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">
+                                <i class="bi bi-people"></i> Equipe {{ grupo.numero }}
+                            </h5>
+
+                            {% if grupo.confirmado %}
+                                <span class="badge bg-success">
+                                    <i class="bi bi-check-circle"></i> Confirmada
+                                </span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">
+                                    <i class="bi bi-hourglass-split"></i> Pendente
+                                </span>
+                            {% endif %}
+                        </div>
+
+                        <label class="form-label" for="periodo_{{ grupo.numero }}">Período</label>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="periodo_{{ grupo.numero }}"
+                            name="periodo_{{ grupo.numero }}"
+                            value="{{ grupo.periodo or '' }}"
+                            placeholder="Ex.: 03/08 a 08/08"
+                            required
+                        >
+
+                        {% if grupo.confirmado and grupo.data_confirmacao %}
+                        <small class="text-muted d-block mt-2">
+                            Confirmada em {{ grupo.data_confirmacao.strftime('%d/%m/%Y às %H:%M') }}
+                        </small>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="d-flex gap-2 mt-3">
+            <button type="submit" class="btn btn-ambar">
+                <i class="bi bi-check-lg"></i> Salvar Períodos
+            </button>
+
+            <a href="/dashboard/limpezas" class="btn btn-outline-secondary">
+                <i class="bi bi-eye"></i> Ver Escala
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

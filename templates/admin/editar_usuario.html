@@ -66,3 +66,39 @@
     </div>
 </div>
 {% endblock %}
+
+{% block extra_scripts %}
+<script>
+function formatarCelular(valor) {
+    const numeros = valor.replace(/\D/g, '').slice(0, 11);
+
+    if (numeros.length <= 2) {
+        return numeros;
+    }
+
+    if (numeros.length <= 7) {
+        return `(${numeros.slice(0, 2)}) ${numeros.slice(2)}`;
+    }
+
+    if (numeros.length <= 10) {
+        return `(${numeros.slice(0, 2)}) ${numeros.slice(2, 6)}-${numeros.slice(6)}`;
+    }
+
+    return `(${numeros.slice(0, 2)}) ${numeros.slice(2, 7)}-${numeros.slice(7)}`;
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const campoCelular = document.querySelector('input[name="celular"]');
+
+    if (!campoCelular) {
+        return;
+    }
+
+    campoCelular.value = formatarCelular(campoCelular.value);
+
+    campoCelular.addEventListener('input', function () {
+        this.value = formatarCelular(this.value);
+    });
+});
+</script>
+{% endblock %}

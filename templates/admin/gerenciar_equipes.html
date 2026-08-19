@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}Gerenciar Equipes de Limpeza - TUPBAO{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <h2 class="titulo-secao mb-1">
+                <i class="bi bi-people"></i> Gerenciar Equipes de Limpeza
+            </h2>
+            <p class="text-muted mb-0">
+                Adicione, mova ou remova membros das equipes. As alterações aparecem automaticamente na escala.
+            </p>
+        </div>
+
+        <a href="/dashboard/limpezas" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+    </div>
+
+    <hr class="linha-ambar-left">
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h5 class="titulo-secao mb-3">
+                    <i class="bi bi-person-lines-fill"></i> Membros
+                </h5>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Membro</th>
+                                <th>Equipe atual</th>
+                                <th style="min-width: 220px;">Alterar equipe</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for membro in membros %}
+                            <tr>
+                                <td>
+                                    <strong>{{ membro.nome }}</strong>
+                                    {% if membro.celular %}
+                                    <br>
+                                    <small class="text-muted">
+                                        <i class="bi bi-phone"></i> {{ membro.celular }}
+                                    </small>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {% if membro.grupo_limpeza %}
+                                        <span class="badge bg-primary">
+                                            Equipe {{ membro.grupo_limpeza }}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">
+                                            Sem equipe
+                                        </span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    <select name="grupo_{{ membro.id }}" class="form-select">
+                                        <option value="" {% if not membro.grupo_limpeza %}selected{% endif %}>
+                                            Sem equipe
+                                        </option>
+                                        {% for numero in range(1, 7) %}
+                                        <option value="{{ numero }}" {% if membro.grupo_limpeza == numero %}selected{% endif %}>
+                                            Equipe {{ numero }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2 flex-wrap">
+            <button type="submit" class="btn btn-ambar">
+                <i class="bi bi-check-lg"></i> Salvar Equipes
+            </button>
+
+            <a href="/dashboard/limpezas" class="btn btn-outline-secondary">
+                <i class="bi bi-eye"></i> Ver Escala
+            </a>
+        </div>
+    </form>
+
+    <div class="row mt-5">
+        {% for numero in range(1, 7) %}
+        <div class="col-lg-4 col-md-6 mb-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="titulo-secao">
+                        <i class="bi bi-people-fill"></i> Equipe {{ numero }}
+                    </h5>
+
+                    {% if grupos[numero] %}
+                        <ul class="list-unstyled mb-0">
+                            {% for membro in grupos[numero] %}
+                            <li class="mb-1">
+                                <i class="bi bi-person-fill me-1"></i>
+                                {{ membro.nome }}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <small class="text-muted">Nenhum membro nesta equipe.</small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="col-lg-4 col-md-6 mb-3">
+            <div class="card shadow-sm h-100 border-secondary">
+                <div class="card-body">
+                    <h5 class="titulo-secao">
+                        <i class="bi bi-person-dash"></i> Sem Equipe
+                    </h5>
+
+                    {% if sem_grupo %}
+                        <ul class="list-unstyled mb-0">
+                            {% for membro in sem_grupo %}
+                            <li class="mb-1">
+                                <i class="bi bi-person me-1"></i>
+                                {{ membro.nome }}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <small class="text-muted">Todos os membros estão vinculados.</small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -420,6 +420,64 @@ def historico_limpezas():
     return render_template('admin/historico_limpezas.html', meses=meses)
 
 
+
+@app.route('/admin/limpezas/equipes', methods=['GET', 'POST'])
+def gerenciar_equipes_limpeza():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    if not pode_gerenciar('limpeza'):
+        flash('Acesso restrito ao gerenciamento de limpezas.')
+        return redirect(url_for('dashboard'))
+
+    membros = (
+        Usuario.query
+        .filter_by(ativo=True)
+        .order_by(Usuario.nome.asc())
+        .all()
+    )
+
+    if request.method == 'POST':
+        alteracoes = 0
+
+        for membro in membros:
+            valor = request.form.get(f'grupo_{membro.id}', '').strip()
+
+            if valor in ['1', '2', '3', '4', '5', '6']:
+                novo_grupo = int(valor)
+            else:
+                novo_grupo = None
+
+            if membro.grupo_limpeza != novo_grupo:
+                membro.grupo_limpeza = novo_grupo
+                alteracoes += 1
+
+        db.session.commit()
+
+        if alteracoes:
+            flash(f'✅ Equipes atualizadas! {alteracoes} membro(s) alterado(s).')
+        else:
+            flash('Nenhuma alteração foi realizada.')
+
+        return redirect(url_for('gerenciar_equipes_limpeza'))
+
+    grupos = {numero: [] for numero in range(1, 7)}
+    sem_grupo = []
+
+    for membro in membros:
+        if membro.grupo_limpeza in grupos:
+            grupos[membro.grupo_limpeza].append(membro)
+        else:
+            sem_grupo.append(membro)
+
+    return render_template(
+        'admin/gerenciar_equipes.html',
+        membros=membros,
+        grupos=grupos,
+        sem_grupo=sem_grupo
+    )
+
+
 @app.route('/admin/limpezas/grupos', methods=['GET', 'POST'])
 def gerenciar_grupos_limpeza():
     if 'user_id' not in session:

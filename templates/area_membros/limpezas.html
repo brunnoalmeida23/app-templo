@@ -16,6 +16,10 @@
 
         <div class="d-flex gap-2 flex-wrap">
             {% if session.funcao in ['super_admin', 'admin', 'limpezas'] %}
+            <a href="/admin/limpezas/equipes" class="btn btn-outline-primary">
+                <i class="bi bi-people"></i> Gerenciar Equipes
+            </a>
+
             <a href="/admin/limpezas/grupos" class="btn btn-outline-primary">
                 <i class="bi bi-calendar-week"></i> Períodos da Limpeza
             </a>

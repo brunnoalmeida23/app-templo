@@ -23,6 +23,7 @@ class Usuario(db.Model):
     funcao = db.Column(db.String(50), default='membro')
     ultimo_acesso = db.Column(db.DateTime, nullable=True)
     ativo = db.Column(db.Boolean, default=True)
+    grupo_limpeza = db.Column(db.Integer, nullable=True)
 
 class AvisoLido(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -37,6 +38,21 @@ class CheckinLimpeza(db.Model):
     grupo = db.Column(db.String(50), nullable=False)
     periodo = db.Column(db.String(50), nullable=True)
     data_checkin = db.Column(db.DateTime, default=datetime.utcnow)
+
+class GrupoLimpeza(db.Model):
+    __tablename__ = 'grupo_limpeza'
+
+    id = db.Column(db.Integer, primary_key=True)
+    numero = db.Column(db.Integer, unique=True, nullable=False)
+    periodo = db.Column(db.String(50), nullable=True)
+    confirmado = db.Column(db.Boolean, default=False, nullable=False)
+    confirmado_por = db.Column(
+        db.Integer,
+        db.ForeignKey('usuario.id'),
+        nullable=True
+    )
+    data_confirmacao = db.Column(db.DateTime, nullable=True)
+
 
 class Mensalidade(db.Model):
     id = db.Column(db.Integer, primary_key=True)

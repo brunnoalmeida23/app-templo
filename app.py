@@ -208,8 +208,44 @@ def marcar_lido(id):
 def ver_limpezas():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    limpezas = Publicacao.query.filter_by(tipo='limpeza').order_by(Publicacao.data_publicacao.desc()).all()
-    return render_template('area_membros/limpezas.html', limpezas=limpezas)
+
+    grupos = GrupoLimpeza.query.order_by(GrupoLimpeza.numero).all()
+
+    grupos_por_numero = {grupo.numero: grupo for grupo in grupos}
+
+    # Garante que a tela sempre tenha as 6 equipes, mesmo se alguma ainda não existir no banco.
+    for numero in range(1, 7):
+        if numero not in grupos_por_numero:
+            novo_grupo = GrupoLimpeza(
+                numero=numero,
+                periodo='',
+                confirmado=False
+            )
+            db.session.add(novo_grupo)
+
+    db.session.commit()
+
+    grupos = GrupoLimpeza.query.order_by(GrupoLimpeza.numero).all()
+
+    membros = (
+        Usuario.query
+        .filter_by(ativo=True)
+        .filter(Usuario.grupo_limpeza.isnot(None))
+        .order_by(Usuario.nome.asc())
+        .all()
+    )
+
+    membros_por_grupo = {numero: [] for numero in range(1, 7)}
+
+    for membro in membros:
+        if membro.grupo_limpeza in membros_por_grupo:
+            membros_por_grupo[membro.grupo_limpeza].append(membro)
+
+    return render_template(
+        'area_membros/limpezas.html',
+        grupos=grupos,
+        membros_por_grupo=membros_por_grupo
+    )
 
 @app.route('/minha-mensalidade')
 def minha_mensalidade():

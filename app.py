@@ -456,27 +456,60 @@ def gerenciar_usuarios():
 
 @app.route('/admin/usuarios/cadastrar', methods=['GET', 'POST'])
 def cadastrar_usuario():
-    if not pode_gerenciar_usuarios(): flash('Acesso restrito ao Dirigente.'); return redirect(url_for('dashboard'))
+    if not pode_gerenciar_usuarios():
+        flash('Acesso restrito ao Dirigente.')
+        return redirect(url_for('dashboard'))
+
     if request.method == 'POST':
-        nome = request.form['nome']; email = request.form['email']; senha = request.form['senha']; funcao = request.form['funcao']
-        if Usuario.query.filter_by(email=email).first(): flash('E-mail já cadastrado.')
+        nome = request.form['nome']
+        email = request.form['email']
+        senha = request.form['senha']
+        funcao = request.form['funcao']
+
+        grupo_limpeza_raw = request.form.get('grupo_limpeza', '').strip()
+        grupo_limpeza = int(grupo_limpeza_raw) if grupo_limpeza_raw in ['1', '2', '3', '4', '5', '6'] else None
+
+        if Usuario.query.filter_by(email=email).first():
+            flash('E-mail já cadastrado.')
         else:
-            novo = Usuario(nome=nome, email=email, senha=generate_password_hash(senha), funcao=funcao, is_admin=(funcao in ['super_admin', 'admin']))
-            db.session.add(novo); db.session.commit()
+            novo = Usuario(
+                nome=nome,
+                email=email,
+                senha=generate_password_hash(senha),
+                funcao=funcao,
+                is_admin=(funcao in ['super_admin', 'admin']),
+                grupo_limpeza=grupo_limpeza
+            )
+            db.session.add(novo)
+            db.session.commit()
             flash(f'✅ Usuário {nome} cadastrado como {funcao}!')
             return redirect(url_for('gerenciar_usuarios'))
+
     return render_template('admin/cadastrar_usuario.html')
 
 @app.route('/admin/usuarios/editar/<int:id>', methods=['GET', 'POST'])
 def editar_usuario(id):
-    if not pode_gerenciar_usuarios(): flash('Acesso restrito ao Dirigente.'); return redirect(url_for('dashboard'))
+    if not pode_gerenciar_usuarios():
+        flash('Acesso restrito ao Dirigente.')
+        return redirect(url_for('dashboard'))
+
     user = Usuario.query.get_or_404(id)
+
     if request.method == 'POST':
-        user.nome = request.form['nome']; user.funcao = request.form['funcao']
+        user.nome = request.form['nome']
+        user.funcao = request.form['funcao']
         user.is_admin = (request.form['funcao'] in ['super_admin', 'admin'])
-        if request.form.get('nova_senha'): user.senha = generate_password_hash(request.form['nova_senha'])
-        db.session.commit(); flash('✅ Usuário atualizado!')
+
+        grupo_limpeza_raw = request.form.get('grupo_limpeza', '').strip()
+        user.grupo_limpeza = int(grupo_limpeza_raw) if grupo_limpeza_raw in ['1', '2', '3', '4', '5', '6'] else None
+
+        if request.form.get('nova_senha'):
+            user.senha = generate_password_hash(request.form['nova_senha'])
+
+        db.session.commit()
+        flash('✅ Usuário atualizado!')
         return redirect(url_for('gerenciar_usuarios'))
+
     return render_template('admin/editar_usuario.html', usuario=user)
 
 @app.route('/admin/usuarios/excluir/<int:id>')

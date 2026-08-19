@@ -37,6 +37,20 @@
                     </select>
                 </div>
 
+                <div class="mb-3">
+                    <label class="form-label"><i class="bi bi-people"></i> Grupo de Limpeza</label>
+                    <select name="grupo_limpeza" class="form-select">
+                        <option value="" {% if not usuario.grupo_limpeza %}selected{% endif %}>Sem grupo definido</option>
+                        <option value="1" {% if usuario.grupo_limpeza == 1 %}selected{% endif %}>Equipe 1</option>
+                        <option value="2" {% if usuario.grupo_limpeza == 2 %}selected{% endif %}>Equipe 2</option>
+                        <option value="3" {% if usuario.grupo_limpeza == 3 %}selected{% endif %}>Equipe 3</option>
+                        <option value="4" {% if usuario.grupo_limpeza == 4 %}selected{% endif %}>Equipe 4</option>
+                        <option value="5" {% if usuario.grupo_limpeza == 5 %}selected{% endif %}>Equipe 5</option>
+                        <option value="6" {% if usuario.grupo_limpeza == 6 %}selected{% endif %}>Equipe 6</option>
+                    </select>
+                    <small class="text-muted">Opcional. Define qual equipe este usuário pode confirmar na limpeza.</small>
+                </div>
+
                 <div class="d-flex gap-2">
                     <button type="submit" class="btn btn-ambar"><i class="bi bi-check-lg"></i> Salvar</button>
                     <a href="/admin/usuarios" class="btn btn-outline-secondary">Cancelar</a>

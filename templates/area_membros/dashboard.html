@@ -45,6 +45,7 @@
                 <p class="text-muted small">Giras e eventos</p>
             </a>
         </div>
+
         <div class="col-lg-4 col-md-6 mb-3">
             <a href="/dashboard/avisos" class="card card-dash shadow-sm p-3 text-center text-decoration-none text-dark">
                 <i class="bi bi-megaphone" style="font-size: 2rem; color: var(--roxo);"></i>
@@ -52,6 +53,7 @@
                 <p class="text-muted small">Comunicados do Dirigente</p>
             </a>
         </div>
+
         <div class="col-lg-4 col-md-6 mb-3">
             <a href="/dashboard/limpezas" class="card card-dash shadow-sm p-3 text-center text-decoration-none text-dark">
                 <i class="bi bi-bucket" style="font-size: 2rem; color: var(--roxo);"></i>
@@ -59,6 +61,15 @@
                 <p class="text-muted small">Escala da casa</p>
             </a>
         </div>
+
+        <div class="col-lg-4 col-md-6 mb-3">
+            <a href="/checkin/limpeza" class="card card-dash shadow-sm p-3 text-center text-decoration-none text-dark">
+                <i class="bi bi-check2-circle" style="font-size: 2rem; color: var(--roxo);"></i>
+                <h5 class="mt-2">Confirmar Limpeza</h5>
+                <p class="text-muted small">Registrar presen&ccedil;a na limpeza</p>
+            </a>
+        </div>
+
         <div class="col-lg-4 col-md-6 mb-3">
             <a href="/minha-mensalidade" class="card card-dash shadow-sm p-3 text-center text-decoration-none text-dark">
                 <i class="bi bi-credit-card" style="font-size: 2rem; color: var(--roxo);"></i>
@@ -66,6 +77,7 @@
                 <p class="text-muted small">Acompanhar pagamentos</p>
             </a>
         </div>
+
         {% if session.is_admin %}
         <div class="col-lg-4 col-md-6 mb-3">
             <a href="/dashboard/financeiro" class="card card-dash shadow-sm p-3 text-center text-decoration-none text-dark">
@@ -74,6 +86,7 @@
                 <p class="text-muted small">Transparência</p>
             </a>
         </div>
+
         <div class="col-lg-4 col-md-6 mb-3">
             <a href="/admin" class="card card-dash shadow-sm p-3 text-center text-decoration-none text-dark" style="border-top-color: var(--roxo);">
                 <i class="bi bi-gear" style="font-size: 2rem; color: var(--roxo);"></i>
@@ -82,6 +95,7 @@
             </a>
         </div>
         {% endif %}
+
         <div class="col-lg-4 col-md-6 mb-3">
             <a href="/perfil" class="card card-dash shadow-sm p-3 text-center text-decoration-none text-dark">
                 <i class="bi bi-person-gear" style="font-size: 2rem; color: var(--roxo);"></i>
@@ -94,6 +108,7 @@
     <!-- Avisos do Dirigente -->
     <h4 class="mt-4 titulo-secao"><i class="bi bi-megaphone"></i> Avisos do Dirigente</h4>
     <hr class="linha-ambar-left">
+
     {% if avisos %}
         {% for aviso in avisos %}
         <div class="aviso-item">
@@ -118,4 +133,5 @@ if ('Notification' in window) {
     }
 }
 </script>
+
 {% endblock %}

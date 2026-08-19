@@ -10,7 +10,7 @@
                 <i class="bi bi-people"></i> Gerenciar Equipes de Limpeza
             </h2>
             <p class="text-muted mb-0">
-                Adicione, mova ou remova membros das equipes. As alterações aparecem automaticamente na escala.
+                Crie equipes, altere períodos e organize os membros da escala.
             </p>
         </div>
 
@@ -32,126 +32,169 @@
         {% endif %}
     {% endwith %}
 
-    <form method="POST">
-        <div class="card shadow-sm mb-4">
-            <div class="card-body">
-                <h5 class="titulo-secao mb-3">
-                    <i class="bi bi-person-lines-fill"></i> Membros
-                </h5>
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="titulo-secao mb-3">
+                <i class="bi bi-plus-circle"></i> Nova Equipe
+            </h5>
 
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead>
-                            <tr>
-                                <th>Membro</th>
-                                <th>Equipe atual</th>
-                                <th style="min-width: 220px;">Alterar equipe</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+            <form method="POST" action="/admin/limpezas/equipes/nova" class="row g-2 align-items-end">
+                <div class="col-md-8">
+                    <label class="form-label">Período inicial</label>
+                    <input
+                        type="text"
+                        name="periodo"
+                        class="form-control"
+                        placeholder="Ex.: 14/09 a 19/09"
+                    >
+                </div>
+
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-ambar w-100">
+                        <i class="bi bi-plus-lg"></i> Criar Nova Equipe
+                    </button>
+                </div>
+            </form>
+
+            <small class="text-muted d-block mt-2">
+                O sistema cria automaticamente o próximo número disponível.
+            </small>
+        </div>
+    </div>
+
+    <div class="row">
+        {% for equipe in equipes %}
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm h-100" style="border-top: 3px solid var(--ambar);">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
+                        <div>
+                            <h4 class="titulo-secao mb-1">
+                                <i class="bi bi-people-fill"></i> Equipe {{ equipe.numero }}
+                            </h4>
+                            <div class="text-muted">
+                                📅 {{ equipe.periodo if equipe.periodo else 'Período não definido' }}
+                            </div>
+                        </div>
+
+                        <form method="POST" action="/admin/limpezas/equipes/{{ equipe.numero }}/desativar" onsubmit="return confirm('Desativar a Equipe {{ equipe.numero }}? Os membros ficarão sem equipe.');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-pause-circle"></i> Desativar
+                            </button>
+                        </form>
+                    </div>
+
+                    <form method="POST" action="/admin/limpezas/equipes/{{ equipe.numero }}/periodo" class="mb-4">
+                        <label class="form-label">Editar período</label>
+                        <div class="input-group">
+                            <input
+                                type="text"
+                                name="periodo"
+                                class="form-control"
+                                value="{{ equipe.periodo or '' }}"
+                                placeholder="Ex.: 03/08 a 08/08"
+                                required
+                            >
+                            <button type="submit" class="btn btn-outline-primary">
+                                <i class="bi bi-check-lg"></i> Salvar
+                            </button>
+                        </div>
+                    </form>
+
+                    <h6 class="fw-bold">
+                        <i class="bi bi-person-check"></i> Membros
+                    </h6>
+
+                    {% set membros = membros_por_grupo.get(equipe.numero, []) %}
+
+                    {% if membros %}
+                        <div class="list-group list-group-flush mb-3">
                             {% for membro in membros %}
-                            <tr>
-                                <td>
-                                    <strong>{{ membro.nome }}</strong>
-                                    {% if membro.celular %}
-                                    <br>
-                                    <small class="text-muted">
-                                        <i class="bi bi-phone"></i> {{ membro.celular }}
-                                    </small>
-                                    {% endif %}
-                                </td>
+                            <div class="list-group-item px-0 d-flex justify-content-between align-items-center gap-2">
+                                <span>
+                                    <i class="bi bi-person-fill me-1"></i>
+                                    {{ membro.nome }}
+                                </span>
 
-                                <td>
-                                    {% if membro.grupo_limpeza %}
-                                        <span class="badge bg-primary">
-                                            Equipe {{ membro.grupo_limpeza }}
-                                        </span>
-                                    {% else %}
-                                        <span class="badge bg-secondary">
-                                            Sem equipe
-                                        </span>
-                                    {% endif %}
-                                </td>
+                                <form method="POST" action="/admin/limpezas/equipes/{{ equipe.numero }}/remover/{{ membro.id }}" class="m-0">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Remover da equipe">
+                                        <i class="bi bi-x-lg"></i> Remover
+                                    </button>
+                                </form>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted small">
+                            Nenhum membro nesta equipe.
+                        </p>
+                    {% endif %}
 
-                                <td>
-                                    <select name="grupo_{{ membro.id }}" class="form-select">
-                                        <option value="" {% if not membro.grupo_limpeza %}selected{% endif %}>
-                                            Sem equipe
-                                        </option>
-                                        {% for numero in range(1, 7) %}
-                                        <option value="{{ numero }}" {% if membro.grupo_limpeza == numero %}selected{% endif %}>
-                                            Equipe {{ numero }}
+                    <form method="POST" action="/admin/limpezas/equipes/{{ equipe.numero }}/adicionar">
+                        <label class="form-label">
+                            <i class="bi bi-person-plus"></i> Adicionar ou mover membro
+                        </label>
+
+                        <div class="input-group">
+                            <select name="usuario_id" class="form-select" required>
+                                <option value="">Selecione...</option>
+                                {% for membro in sem_equipe %}
+                                <option value="{{ membro.id }}">
+                                    {{ membro.nome }}
+                                </option>
+                                {% endfor %}
+
+                                {% for outra_equipe in equipes %}
+                                    {% if outra_equipe.numero != equipe.numero %}
+                                        {% for membro in membros_por_grupo.get(outra_equipe.numero, []) %}
+                                        <option value="{{ membro.id }}">
+                                            {{ membro.nome }} — atualmente Equipe {{ outra_equipe.numero }}
                                         </option>
                                         {% endfor %}
-                                    </select>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
 
-        <div class="d-flex gap-2 flex-wrap">
-            <button type="submit" class="btn btn-ambar">
-                <i class="bi bi-check-lg"></i> Salvar Equipes
-            </button>
-
-            <a href="/dashboard/limpezas" class="btn btn-outline-secondary">
-                <i class="bi bi-eye"></i> Ver Escala
-            </a>
-        </div>
-    </form>
-
-    <div class="row mt-5">
-        {% for numero in range(1, 7) %}
-        <div class="col-lg-4 col-md-6 mb-3">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <h5 class="titulo-secao">
-                        <i class="bi bi-people-fill"></i> Equipe {{ numero }}
-                    </h5>
-
-                    {% if grupos[numero] %}
-                        <ul class="list-unstyled mb-0">
-                            {% for membro in grupos[numero] %}
-                            <li class="mb-1">
-                                <i class="bi bi-person-fill me-1"></i>
-                                {{ membro.nome }}
-                            </li>
-                            {% endfor %}
-                        </ul>
-                    {% else %}
-                        <small class="text-muted">Nenhum membro nesta equipe.</small>
-                    {% endif %}
+                            <button type="submit" class="btn btn-ambar">
+                                <i class="bi bi-plus-lg"></i> Adicionar
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
         {% endfor %}
+    </div>
 
-        <div class="col-lg-4 col-md-6 mb-3">
-            <div class="card shadow-sm h-100 border-secondary">
-                <div class="card-body">
-                    <h5 class="titulo-secao">
-                        <i class="bi bi-person-dash"></i> Sem Equipe
-                    </h5>
+    {% if equipes_inativas %}
+    <div class="card shadow-sm mt-3">
+        <div class="card-body">
+            <h5 class="titulo-secao mb-3">
+                <i class="bi bi-archive"></i> Equipes Desativadas
+            </h5>
 
-                    {% if sem_grupo %}
-                        <ul class="list-unstyled mb-0">
-                            {% for membro in sem_grupo %}
-                            <li class="mb-1">
-                                <i class="bi bi-person me-1"></i>
-                                {{ membro.nome }}
-                            </li>
-                            {% endfor %}
-                        </ul>
-                    {% else %}
-                        <small class="text-muted">Todos os membros estão vinculados.</small>
-                    {% endif %}
+            <div class="row">
+                {% for equipe in equipes_inativas %}
+                <div class="col-md-6 mb-2">
+                    <div class="border rounded p-3 d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>Equipe {{ equipe.numero }}</strong><br>
+                            <small class="text-muted">
+                                {{ equipe.periodo if equipe.periodo else 'Sem período' }}
+                            </small>
+                        </div>
+
+                        <form method="POST" action="/admin/limpezas/equipes/{{ equipe.numero }}/reativar">
+                            <button type="submit" class="btn btn-sm btn-outline-success">
+                                <i class="bi bi-arrow-counterclockwise"></i> Reativar
+                            </button>
+                        </form>
+                    </div>
                 </div>
+                {% endfor %}
             </div>
         </div>
     </div>
+    {% endif %}
 </div>
 {% endblock %}

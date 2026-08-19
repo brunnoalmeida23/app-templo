@@ -47,6 +47,7 @@ class GrupoLimpeza(db.Model):
     numero = db.Column(db.Integer, unique=True, nullable=False)
     periodo = db.Column(db.String(50), nullable=True)
     confirmado = db.Column(db.Boolean, default=False, nullable=False)
+    ativo = db.Column(db.Boolean, default=True, nullable=False)
     confirmado_por = db.Column(
         db.Integer,
         db.ForeignKey('usuario.id'),
@@ -209,23 +210,12 @@ def ver_limpezas():
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
-    grupos = GrupoLimpeza.query.order_by(GrupoLimpeza.numero).all()
-
-    grupos_por_numero = {grupo.numero: grupo for grupo in grupos}
-
-    # Garante que a tela sempre tenha as 6 equipes, mesmo se alguma ainda não existir no banco.
-    for numero in range(1, 7):
-        if numero not in grupos_por_numero:
-            novo_grupo = GrupoLimpeza(
-                numero=numero,
-                periodo='',
-                confirmado=False
-            )
-            db.session.add(novo_grupo)
-
-    db.session.commit()
-
-    grupos = GrupoLimpeza.query.order_by(GrupoLimpeza.numero).all()
+    grupos = (
+        GrupoLimpeza.query
+        .filter_by(ativo=True)
+        .order_by(GrupoLimpeza.numero.asc())
+        .all()
+    )
 
     membros = (
         Usuario.query
@@ -235,7 +225,7 @@ def ver_limpezas():
         .all()
     )
 
-    membros_por_grupo = {numero: [] for numero in range(1, 7)}
+    membros_por_grupo = {grupo.numero: [] for grupo in grupos}
 
     for membro in membros:
         if membro.grupo_limpeza in membros_por_grupo:
@@ -426,9 +416,23 @@ def gerenciar_equipes_limpeza():
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
-    if not pode_gerenciar('limpeza'):
-        flash('Acesso restrito ao gerenciamento de limpezas.')
+    if session.get('funcao') not in ['super_admin', 'limpezas']:
+        flash('Acesso restrito à gestão das equipes de limpeza.')
         return redirect(url_for('dashboard'))
+
+    equipes_ativas = (
+        GrupoLimpeza.query
+        .filter_by(ativo=True)
+        .order_by(GrupoLimpeza.numero.asc())
+        .all()
+    )
+
+    equipes_inativas = (
+        GrupoLimpeza.query
+        .filter_by(ativo=False)
+        .order_by(GrupoLimpeza.numero.asc())
+        .all()
+    )
 
     membros = (
         Usuario.query
@@ -437,45 +441,161 @@ def gerenciar_equipes_limpeza():
         .all()
     )
 
-    if request.method == 'POST':
-        alteracoes = 0
-
-        for membro in membros:
-            valor = request.form.get(f'grupo_{membro.id}', '').strip()
-
-            if valor in ['1', '2', '3', '4', '5', '6']:
-                novo_grupo = int(valor)
-            else:
-                novo_grupo = None
-
-            if membro.grupo_limpeza != novo_grupo:
-                membro.grupo_limpeza = novo_grupo
-                alteracoes += 1
-
-        db.session.commit()
-
-        if alteracoes:
-            flash(f'✅ Equipes atualizadas! {alteracoes} membro(s) alterado(s).')
-        else:
-            flash('Nenhuma alteração foi realizada.')
-
-        return redirect(url_for('gerenciar_equipes_limpeza'))
-
-    grupos = {numero: [] for numero in range(1, 7)}
-    sem_grupo = []
+    membros_por_grupo = {equipe.numero: [] for equipe in equipes_ativas}
+    sem_equipe = []
 
     for membro in membros:
-        if membro.grupo_limpeza in grupos:
-            grupos[membro.grupo_limpeza].append(membro)
+        if membro.grupo_limpeza in membros_por_grupo:
+            membros_por_grupo[membro.grupo_limpeza].append(membro)
         else:
-            sem_grupo.append(membro)
+            sem_equipe.append(membro)
 
     return render_template(
         'admin/gerenciar_equipes.html',
-        membros=membros,
-        grupos=grupos,
-        sem_grupo=sem_grupo
+        equipes=equipes_ativas,
+        equipes_inativas=equipes_inativas,
+        membros_por_grupo=membros_por_grupo,
+        sem_equipe=sem_equipe
     )
+
+
+@app.route('/admin/limpezas/equipes/nova', methods=['POST'])
+def criar_equipe_limpeza():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    if session.get('funcao') not in ['super_admin', 'limpezas']:
+        flash('Acesso restrito à gestão das equipes de limpeza.')
+        return redirect(url_for('dashboard'))
+
+    maior_numero = db.session.query(db.func.max(GrupoLimpeza.numero)).scalar() or 0
+    novo_numero = maior_numero + 1
+    periodo = request.form.get('periodo', '').strip()
+
+    nova = GrupoLimpeza(
+        numero=novo_numero,
+        periodo=periodo,
+        confirmado=False,
+        ativo=True
+    )
+
+    db.session.add(nova)
+    db.session.commit()
+
+    flash(f'✅ Equipe {novo_numero} criada com sucesso!')
+    return redirect(url_for('gerenciar_equipes_limpeza'))
+
+
+@app.route('/admin/limpezas/equipes/<int:numero>/periodo', methods=['POST'])
+def editar_periodo_equipe(numero):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    if session.get('funcao') not in ['super_admin', 'limpezas']:
+        flash('Acesso restrito à gestão das equipes de limpeza.')
+        return redirect(url_for('dashboard'))
+
+    equipe = GrupoLimpeza.query.filter_by(numero=numero).first_or_404()
+    novo_periodo = request.form.get('periodo', '').strip()
+
+    if novo_periodo != (equipe.periodo or ''):
+        equipe.periodo = novo_periodo
+        equipe.confirmado = False
+        equipe.confirmado_por = None
+        equipe.data_confirmacao = None
+        db.session.commit()
+        flash(f'✅ Período da Equipe {numero} atualizado!')
+    else:
+        flash('Nenhuma alteração foi realizada.')
+
+    return redirect(url_for('gerenciar_equipes_limpeza'))
+
+
+@app.route('/admin/limpezas/equipes/<int:numero>/adicionar', methods=['POST'])
+def adicionar_membro_equipe(numero):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    if session.get('funcao') not in ['super_admin', 'limpezas']:
+        flash('Acesso restrito à gestão das equipes de limpeza.')
+        return redirect(url_for('dashboard'))
+
+    equipe = GrupoLimpeza.query.filter_by(numero=numero, ativo=True).first_or_404()
+    usuario_id = request.form.get('usuario_id', type=int)
+
+    if not usuario_id:
+        flash('Selecione um membro.')
+        return redirect(url_for('gerenciar_equipes_limpeza'))
+
+    membro = Usuario.query.filter_by(id=usuario_id, ativo=True).first_or_404()
+    membro.grupo_limpeza = equipe.numero
+    db.session.commit()
+
+    flash(f'✅ {membro.nome} adicionado(a) à Equipe {equipe.numero}.')
+    return redirect(url_for('gerenciar_equipes_limpeza'))
+
+
+@app.route('/admin/limpezas/equipes/<int:numero>/remover/<int:usuario_id>', methods=['POST'])
+def remover_membro_equipe(numero, usuario_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    if session.get('funcao') not in ['super_admin', 'limpezas']:
+        flash('Acesso restrito à gestão das equipes de limpeza.')
+        return redirect(url_for('dashboard'))
+
+    membro = Usuario.query.get_or_404(usuario_id)
+
+    if membro.grupo_limpeza == numero:
+        membro.grupo_limpeza = None
+        db.session.commit()
+        flash(f'✅ {membro.nome} removido(a) da Equipe {numero}.')
+    else:
+        flash('Este membro não pertence a essa equipe.')
+
+    return redirect(url_for('gerenciar_equipes_limpeza'))
+
+
+@app.route('/admin/limpezas/equipes/<int:numero>/desativar', methods=['POST'])
+def desativar_equipe_limpeza(numero):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    if session.get('funcao') not in ['super_admin', 'limpezas']:
+        flash('Acesso restrito à gestão das equipes de limpeza.')
+        return redirect(url_for('dashboard'))
+
+    equipe = GrupoLimpeza.query.filter_by(numero=numero).first_or_404()
+
+    membros = Usuario.query.filter_by(grupo_limpeza=numero).all()
+    for membro in membros:
+        membro.grupo_limpeza = None
+
+    equipe.ativo = False
+    db.session.commit()
+
+    flash(f'✅ Equipe {numero} desativada. Os membros foram movidos para "Sem equipe".')
+    return redirect(url_for('gerenciar_equipes_limpeza'))
+
+
+@app.route('/admin/limpezas/equipes/<int:numero>/reativar', methods=['POST'])
+def reativar_equipe_limpeza(numero):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    if session.get('funcao') not in ['super_admin', 'limpezas']:
+        flash('Acesso restrito à gestão das equipes de limpeza.')
+        return redirect(url_for('dashboard'))
+
+    equipe = GrupoLimpeza.query.filter_by(numero=numero).first_or_404()
+    equipe.ativo = True
+    equipe.confirmado = False
+    equipe.confirmado_por = None
+    equipe.data_confirmacao = None
+    db.session.commit()
+
+    flash(f'✅ Equipe {numero} reativada.')
+    return redirect(url_for('gerenciar_equipes_limpeza'))
 
 
 @app.route('/admin/limpezas/grupos', methods=['GET', 'POST'])
@@ -483,27 +603,16 @@ def gerenciar_grupos_limpeza():
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
-    if not pode_gerenciar('limpeza'):
+    if session.get('funcao') not in ['super_admin', 'limpezas']:
         flash('Acesso restrito ao gerenciamento de limpezas.')
         return redirect(url_for('dashboard'))
 
-    grupos_existentes = {
-        grupo.numero: grupo
-        for grupo in GrupoLimpeza.query.order_by(GrupoLimpeza.numero).all()
-    }
-
-    for numero in range(1, 7):
-        if numero not in grupos_existentes:
-            novo_grupo = GrupoLimpeza(
-                numero=numero,
-                periodo='',
-                confirmado=False
-            )
-            db.session.add(novo_grupo)
-
-    db.session.commit()
-
-    grupos = GrupoLimpeza.query.order_by(GrupoLimpeza.numero).all()
+    grupos = (
+        GrupoLimpeza.query
+        .filter_by(ativo=True)
+        .order_by(GrupoLimpeza.numero.asc())
+        .all()
+    )
 
     if request.method == 'POST':
         alterou = False
@@ -618,7 +727,7 @@ def cadastrar_usuario():
         celular = ''.join(filter(str.isdigit, request.form.get('celular', '')))
 
         grupo_limpeza_raw = request.form.get('grupo_limpeza', '').strip()
-        grupo_limpeza = int(grupo_limpeza_raw) if grupo_limpeza_raw in ['1', '2', '3', '4', '5', '6'] else None
+        grupo_limpeza = int(grupo_limpeza_raw) if grupo_limpeza_raw.isdigit() else None
 
         if Usuario.query.filter_by(email=email).first():
             flash('E-mail já cadastrado.')
@@ -653,7 +762,7 @@ def editar_usuario(id):
         user.is_admin = (request.form['funcao'] in ['super_admin', 'admin'])
 
         grupo_limpeza_raw = request.form.get('grupo_limpeza', '').strip()
-        user.grupo_limpeza = int(grupo_limpeza_raw) if grupo_limpeza_raw in ['1', '2', '3', '4', '5', '6'] else None
+        user.grupo_limpeza = int(grupo_limpeza_raw) if grupo_limpeza_raw.isdigit() else None
 
         celular = ''.join(filter(str.isdigit, request.form.get('celular', '')))
         user.celular = celular if celular else None

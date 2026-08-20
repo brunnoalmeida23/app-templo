@@ -3,7 +3,12 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 import os
-from services.notifications import enviar_notificacao as enviar_notificacao_service
+from services.notifications import (
+    enviar_notificacao as enviar_notificacao_service,
+    enviar_push_interno,
+    enviar_push_publico,
+    enviar_push_turma
+)
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(24)
@@ -164,18 +169,6 @@ def pode_gerenciar_equipes_limpeza():
 
 def enviar_notificacao(titulo, mensagem):
     return enviar_notificacao_service(titulo, mensagem)
-
-    try:
-        onesignal_app_id = os.environ.get('ONESIGNAL_APP_ID', '')
-        onesignal_api_key = os.environ.get('ONESIGNAL_API_KEY', '')
-        if not onesignal_app_id or not onesignal_api_key:
-            return
-        url = "https://onesignal.com/api/v1/notifications"
-        headers = {"Authorization": f"Bearer {onesignal_api_key}", "Content-Type": "application/json"}
-        data = {"app_id": onesignal_app_id, "headings": {"en": titulo}, "contents": {"en": mensagem}, "included_segments": ["Active Subscriptions"]}
-        requests.post(url, json=data, headers=headers)
-    except:
-        pass
 
 # ============ ROTAS PÚBLICAS ============
 
@@ -427,9 +420,20 @@ def novo_aviso(publico):
         db.session.commit()
 
         if publico == 'interno':
-            flash('✅ Aviso interno publicado com sucesso!')
+            push_enviado = enviar_push_interno(
+                "📢 Novo Aviso Interno - TUPBAO",
+                titulo
+            )
+
+            if push_enviado:
+                flash('✅ Aviso interno publicado e notificação enviada!')
+            else:
+                flash('⚠️ Aviso interno publicado, mas a notificação não pôde ser enviada.')
+
             return redirect(url_for('ver_avisos_internos'))
 
+        # O push público será ativado somente depois que os dispositivos
+        # externos estiverem classificados com tupbao_publico = 1.
         flash('✅ Aviso público publicado com sucesso!')
         return redirect(url_for('ver_avisos_publicos'))
 

@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}Notificações - TUPBAO{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7 col-md-9">
+
+            <div class="card shadow-sm">
+                <div class="card-body p-4 p-md-5 text-center">
+
+                    <i
+                        class="bi bi-bell-fill"
+                        style="font-size: 3rem; color: var(--ambar);"
+                    ></i>
+
+                    <h2 class="titulo-secao mt-3">
+                        Receba os avisos do TUPBAO
+                    </h2>
+
+                    <p class="text-muted mt-3">
+                        Receba no celular comunicados públicos sobre giras,
+                        festas, eventos e atividades do templo.
+                    </p>
+
+                    <p class="small text-muted">
+                        Não é necessário criar conta, informar telefone ou
+                        fornecer dados pessoais.
+                    </p>
+
+                    <div
+                        id="statusNotificacao"
+                        class="alert alert-secondary mt-4"
+                    >
+                        Verificando disponibilidade das notificações...
+                    </div>
+
+                    <button
+                        type="button"
+                        id="btnAtivarPush"
+                        class="btn btn-ambar btn-lg mt-2"
+                        onclick="ativarAvisosPublicos()"
+                    >
+                        <i class="bi bi-bell"></i>
+                        Ativar notificações
+                    </button>
+
+                    <div class="mt-4">
+                        <a href="/" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i>
+                            Voltar ao início
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block extra_scripts %}
+<script>
+    let oneSignalPublico = null;
+
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+
+    OneSignalDeferred.push(async function(OneSignal) {
+        oneSignalPublico = OneSignal;
+
+        const status = document.getElementById('statusNotificacao');
+        const botao = document.getElementById('btnAtivarPush');
+
+        if (!OneSignal.Notifications.isPushSupported()) {
+            status.className = 'alert alert-warning mt-4';
+            status.innerHTML =
+                '<strong>Este navegador não oferece suporte às notificações.</strong>';
+
+            botao.disabled = true;
+            return;
+        }
+
+        const tags = OneSignal.User.getTags();
+
+        if (
+            OneSignal.Notifications.permission &&
+            tags &&
+            tags.tupbao_publico === '1'
+        ) {
+            status.className = 'alert alert-success mt-4';
+            status.innerHTML =
+                '<i class="bi bi-check-circle-fill"></i> ' +
+                '<strong>Notificações públicas já estão ativadas neste dispositivo.</strong>';
+
+            botao.innerHTML =
+                '<i class="bi bi-check-lg"></i> Notificações ativadas';
+
+            botao.disabled = true;
+            return;
+        }
+
+        status.className = 'alert alert-info mt-4';
+        status.innerHTML =
+            'Clique no botão abaixo para receber os comunicados públicos do TUPBAO.';
+    });
+
+
+    async function ativarAvisosPublicos() {
+        const status = document.getElementById('statusNotificacao');
+        const botao = document.getElementById('btnAtivarPush');
+
+        if (!oneSignalPublico) {
+            status.className = 'alert alert-danger mt-4';
+            status.textContent =
+                'O serviço de notificações ainda não terminou de carregar. Tente novamente em alguns segundos.';
+            return;
+        }
+
+        try {
+            botao.disabled = true;
+
+            if (!oneSignalPublico.Notifications.isPushSupported()) {
+                status.className = 'alert alert-warning mt-4';
+                status.textContent =
+                    'Este navegador não oferece suporte às notificações.';
+                return;
+            }
+
+            if (!oneSignalPublico.Notifications.permission) {
+                await oneSignalPublico.Notifications.requestPermission();
+            }
+
+            if (!oneSignalPublico.Notifications.permission) {
+                status.className = 'alert alert-warning mt-4';
+                status.innerHTML =
+                    '<strong>Permissão não concedida.</strong><br>' +
+                    'Para receber os avisos, permita notificações nas configurações do navegador ou do aplicativo.';
+
+                botao.disabled = false;
+                return;
+            }
+
+            await oneSignalPublico.User.PushSubscription.optIn();
+
+            oneSignalPublico.User.addTag(
+                'tupbao_publico',
+                '1'
+            );
+
+            status.className = 'alert alert-success mt-4';
+            status.innerHTML =
+                '<i class="bi bi-check-circle-fill"></i> ' +
+                '<strong>Pronto! Você receberá os comunicados públicos do TUPBAO.</strong>';
+
+            botao.innerHTML =
+                '<i class="bi bi-check-lg"></i> Notificações ativadas';
+
+            botao.disabled = true;
+
+        } catch (erro) {
+            console.error('[TUPBAO Push Público]', erro);
+
+            status.className = 'alert alert-danger mt-4';
+            status.innerHTML =
+                '<strong>Não foi possível ativar as notificações.</strong><br>' +
+                'Atualize a página e tente novamente.';
+
+            botao.disabled = false;
+        }
+    }
+</script>
+{% endblock %}

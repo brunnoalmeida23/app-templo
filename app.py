@@ -200,6 +200,10 @@ def projetos():
 def guia():
     return render_template('guia.html')
 
+@app.route('/notificacoes')
+def notificacoes_publicas():
+    return render_template('notificacoes.html')
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':

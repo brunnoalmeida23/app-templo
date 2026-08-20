@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Avisos da Turma - TUPBAO{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7 col-md-9">
+
+            <div class="card shadow-sm">
+                <div class="card-body p-4 p-md-5 text-center">
+
+                    <i
+                        class="bi bi-mortarboard-fill"
+                        style="font-size: 3rem; color: var(--ambar);"
+                    ></i>
+
+                    <h2 class="titulo-secao mt-3">
+                        {{ turma.curso_nome }}
+                    </h2>
+
+                    <h5 class="text-muted">
+                        {{ turma.turma_nome }}
+                    </h5>
+
+                    <p class="mt-4">
+                        Ative as notificações para receber comunicados
+                        exclusivos desta turma.
+                    </p>
+
+                    <p class="small text-muted">
+                        Não é necessário criar uma conta no TUPBAO.
+                    </p>
+
+                    <div
+                        id="statusNotificacao"
+                        class="alert alert-secondary mt-4"
+                    >
+                        Verificando disponibilidade das notificações...
+                    </div>
+
+                    <button
+                        type="button"
+                        id="btnAtivarPush"
+                        class="btn btn-lg mt-2"
+                        style="background-color: var(--ambar); color: #fff;"
+                        onclick="ativarAvisosTurma()"
+                    >
+                        <i class="bi bi-bell"></i>
+                        Ativar avisos desta turma
+                    </button>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block extra_scripts %}
+<script>
+    let oneSignalTurma = null;
+
+    const turmaId = {{ turma.id }};
+    const tagTurma = `turma_${turmaId}`;
+
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+
+    OneSignalDeferred.push(async function(OneSignal) {
+        oneSignalTurma = OneSignal;
+
+        const status = document.getElementById('statusNotificacao');
+        const botao = document.getElementById('btnAtivarPush');
+
+        if (!OneSignal.Notifications.isPushSupported()) {
+            status.className = 'alert alert-warning mt-4';
+            status.innerHTML =
+                '<strong>Este navegador não oferece suporte às notificações.</strong>';
+
+            botao.disabled = true;
+            return;
+        }
+
+        const tags = OneSignal.User.getTags();
+
+        if (
+            OneSignal.Notifications.permission &&
+            tags &&
+            tags[tagTurma] === '1'
+        ) {
+            status.className = 'alert alert-success mt-4';
+            status.innerHTML =
+                '<i class="bi bi-check-circle-fill"></i> ' +
+                '<strong>Você já recebe os avisos desta turma.</strong>';
+
+            botao.innerHTML =
+                '<i class="bi bi-check-lg"></i> Avisos ativados';
+
+            botao.disabled = true;
+            return;
+        }
+
+        status.className = 'alert alert-info mt-4';
+        status.innerHTML =
+            'Clique abaixo para receber os comunicados exclusivos desta turma.';
+    });
+
+
+    async function ativarAvisosTurma() {
+        const status = document.getElementById('statusNotificacao');
+        const botao = document.getElementById('btnAtivarPush');
+
+        if (!oneSignalTurma) {
+            status.className = 'alert alert-danger mt-4';
+            status.textContent =
+                'O serviço de notificações ainda está carregando. Tente novamente.';
+            return;
+        }
+
+        try {
+            botao.disabled = true;
+
+            if (!oneSignalTurma.Notifications.permission) {
+                await oneSignalTurma.Notifications.requestPermission();
+            }
+
+            if (!oneSignalTurma.Notifications.permission) {
+                status.className = 'alert alert-warning mt-4';
+                status.innerHTML =
+                    '<strong>Permissão não concedida.</strong><br>' +
+                    'Autorize as notificações para receber os avisos da turma.';
+
+                botao.disabled = false;
+                return;
+            }
+
+            await oneSignalTurma.User.PushSubscription.optIn();
+
+            oneSignalTurma.User.addTag(
+                tagTurma,
+                '1'
+            );
+
+            status.className = 'alert alert-success mt-4';
+            status.innerHTML =
+                '<i class="bi bi-check-circle-fill"></i> ' +
+                '<strong>Pronto! Você receberá os avisos desta turma.</strong>';
+
+            botao.innerHTML =
+                '<i class="bi bi-check-lg"></i> Avisos ativados';
+
+            botao.disabled = true;
+
+        } catch (erro) {
+            console.error('[TUPBAO Curso Push]', erro);
+
+            status.className = 'alert alert-danger mt-4';
+            status.innerHTML =
+                '<strong>Não foi possível ativar as notificações.</strong><br>' +
+                'Atualize a página e tente novamente.';
+
+            botao.disabled = false;
+        }
+    }
+</script>
+{% endblock %}

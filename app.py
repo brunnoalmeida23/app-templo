@@ -204,6 +204,18 @@ def guia():
 def notificacoes_publicas():
     return render_template('notificacoes.html')
 
+@app.route('/curso/<int:turma_id>/notificacoes')
+def notificacoes_curso(turma_id):
+    turma = TurmaCurso.query.filter_by(
+        id=turma_id,
+        ativo=True
+    ).first_or_404()
+
+    return render_template(
+        'notificacoes_curso.html',
+        turma=turma
+    )
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -495,7 +507,23 @@ def novo_aviso_curso(turma_id):
         db.session.add(aviso)
         db.session.commit()
 
-        flash(f'✅ Aviso publicado para {turma.curso_nome} — {turma.turma_nome}!')
+        push_enviado = enviar_push_turma(
+            turma.id,
+            f"📚 {turma.curso_nome} - TUPBAO",
+            titulo
+        )
+
+        if push_enviado:
+            flash(
+                f'✅ Aviso publicado para {turma.curso_nome} — '
+                f'{turma.turma_nome} e notificação enviada!'
+            )
+        else:
+            flash(
+                f'⚠️ Aviso publicado para {turma.curso_nome} — '
+                f'{turma.turma_nome}, mas a notificação não pôde ser enviada.'
+            )
+
         return redirect(url_for('ver_avisos_cursos'))
 
     return render_template(

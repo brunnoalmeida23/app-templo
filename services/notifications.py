@@ -13,16 +13,24 @@ def _credenciais():
 
 def _enviar(payload):
     """
-    Envia um payload já preparado ao OneSignal.
-    Retorna True quando a API responde com sucesso.
+    Envia um payload ao OneSignal.
+
+    Retorna True somente quando o OneSignal realmente cria
+    a mensagem e devolve um ID.
     """
     app_id, api_key = _credenciais()
 
-    if not app_id or not api_key:
+    if not app_id:
+        print("[OneSignal] ERRO: ONESIGNAL_APP_ID não configurado.")
+        return False
+
+    if not api_key:
+        print("[OneSignal] ERRO: ONESIGNAL_API_KEY não configurada.")
         return False
 
     dados = {
         "app_id": app_id,
+        "target_channel": "push",
         **payload
     }
 
@@ -38,8 +46,39 @@ def _enviar(payload):
             headers=headers,
             timeout=15
         )
-        return resposta.ok
-    except requests.RequestException:
+
+        print(
+            f"[OneSignal] HTTP {resposta.status_code} - "
+            f"{resposta.text}"
+        )
+
+        if not resposta.ok:
+            return False
+
+        try:
+            resultado = resposta.json()
+        except ValueError:
+            print("[OneSignal] ERRO: resposta não é JSON.")
+            return False
+
+        mensagem_id = resultado.get("id")
+
+        if not mensagem_id:
+            print(
+                "[OneSignal] AVISO: requisição aceita, "
+                "mas nenhuma mensagem foi criada."
+            )
+            return False
+
+        print(
+            f"[OneSignal] Mensagem criada com sucesso: "
+            f"{mensagem_id}"
+        )
+
+        return True
+
+    except requests.RequestException as erro:
+        print(f"[OneSignal] ERRO de conexão: {erro}")
         return False
 
 
@@ -100,6 +139,7 @@ def enviar_push_turma(turma_id, titulo, mensagem):
     try:
         turma_id = int(turma_id)
     except (TypeError, ValueError):
+        print("[OneSignal] ERRO: turma_id inválido.")
         return False
 
     payload = _conteudo(titulo, mensagem)

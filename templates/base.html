@@ -35,6 +35,16 @@
             notifyButton: { enable: false },
             allowLocalhostAsSecureOrigin: true
         });
+
+        {% if session.user_id %}
+        // Identifica o membro logado no OneSignal.
+        await OneSignal.login("usuario_{{ session.user_id }}");
+
+        // Marca este usuário como membro interno da casa.
+        OneSignal.User.addTags({
+            tupbao_membro: "1"
+        });
+        {% endif %}
       });
     </script>
 

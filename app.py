@@ -1,4 +1,3 @@
-import requests
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -393,6 +392,103 @@ def ver_avisos_cursos():
     return render_template(
         'area_membros/avisos_cursos.html',
         turmas=turmas
+    )
+
+
+@app.route('/dashboard/avisos/novo/<publico>', methods=['GET', 'POST'])
+def novo_aviso(publico):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    if session.get('funcao') not in ['super_admin', 'admin']:
+        flash('Acesso restrito.')
+        return redirect(url_for('ver_avisos_internos'))
+
+    if publico not in ['interno', 'publico']:
+        flash('Público inválido.')
+        return redirect(url_for('ver_avisos'))
+
+    if request.method == 'POST':
+        titulo = request.form.get('titulo', '').strip()
+        conteudo = request.form.get('conteudo', '').strip()
+
+        if not titulo or not conteudo:
+            flash('Título e conteúdo são obrigatórios.')
+            return redirect(url_for('novo_aviso', publico=publico))
+
+        aviso = Publicacao(
+            titulo=titulo,
+            conteudo=conteudo,
+            tipo='aviso',
+            publico=publico
+        )
+
+        db.session.add(aviso)
+        db.session.commit()
+
+        if publico == 'interno':
+            flash('✅ Aviso interno publicado com sucesso!')
+            return redirect(url_for('ver_avisos_internos'))
+
+        flash('✅ Aviso público publicado com sucesso!')
+        return redirect(url_for('ver_avisos_publicos'))
+
+    titulo_pagina = 'Novo Aviso Interno' if publico == 'interno' else 'Novo Aviso Público'
+
+    descricao = (
+        'Este aviso será destinado somente aos filhos da casa.'
+        if publico == 'interno'
+        else 'Este aviso será destinado ao público externo e consulentes.'
+    )
+
+    return render_template(
+        'area_membros/novo_aviso.html',
+        publico=publico,
+        titulo_pagina=titulo_pagina,
+        descricao=descricao,
+        turma=None
+    )
+
+
+@app.route('/dashboard/avisos/cursos/<int:turma_id>/novo', methods=['GET', 'POST'])
+def novo_aviso_curso(turma_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    if session.get('funcao') not in ['super_admin', 'admin']:
+        flash('Acesso restrito.')
+        return redirect(url_for('ver_avisos_internos'))
+
+    turma = TurmaCurso.query.filter_by(id=turma_id, ativo=True).first_or_404()
+
+    if request.method == 'POST':
+        titulo = request.form.get('titulo', '').strip()
+        conteudo = request.form.get('conteudo', '').strip()
+
+        if not titulo or not conteudo:
+            flash('Título e conteúdo são obrigatórios.')
+            return redirect(url_for('novo_aviso_curso', turma_id=turma.id))
+
+        aviso = Publicacao(
+            titulo=titulo,
+            conteudo=conteudo,
+            tipo='aviso',
+            publico='curso',
+            turma_curso_id=turma.id
+        )
+
+        db.session.add(aviso)
+        db.session.commit()
+
+        flash(f'✅ Aviso publicado para {turma.curso_nome} — {turma.turma_nome}!')
+        return redirect(url_for('ver_avisos_cursos'))
+
+    return render_template(
+        'area_membros/novo_aviso.html',
+        publico='curso',
+        titulo_pagina='Novo Aviso de Curso',
+        descricao=f'Destinado somente à turma {turma.curso_nome} — {turma.turma_nome}.',
+        turma=turma
     )
 
 

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+
 {% block back_button %}{% endblock %}
 
 {% block title %}Avisos Internos - TUPBAO{% endblock %}
@@ -7,29 +8,31 @@
 <div class="container mt-5 mb-5">
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
         <div>
-            <h2 class="titulo-secao mb-1">
-                <i class="bi bi-house-heart"></i> Avisos Internos
-            </h2>
+            <h2 class="titulo-secao mb-1"><i class="bi bi-house-heart"></i> Avisos Internos</h2>
             <p class="text-muted mb-0">Recados destinados somente aos filhos da casa.</p>
         </div>
 
-        {% if session.funcao in ['super_admin', 'admin'] %}
-        <a href="/dashboard/avisos" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left"></i> Central de Avisos
-        </a>
-        {% else %}
-        <a href="/dashboard" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left"></i> Voltar
-        </a>
-        {% endif %}
+        <div class="d-flex gap-2 flex-wrap">
+            {% if session.funcao in ['super_admin', 'admin'] %}
+            <a href="/dashboard/avisos/novo/interno" class="btn btn-ambar">
+                <i class="bi bi-plus-lg"></i> Novo Aviso
+            </a>
+            <a href="/dashboard/avisos" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Central de Avisos
+            </a>
+            {% else %}
+            <a href="/dashboard" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Voltar
+            </a>
+            {% endif %}
+        </div>
     </div>
 
     <hr class="linha-ambar-left">
 
     {% if avisos %}
         {% for aviso in avisos %}
-        <div class="aviso-item {% if aviso.id not in lidos %}border-left-unread{% endif %}"
-             style="{% if aviso.id not in lidos %}border-left: 4px solid var(--ambar); background-color: #fff8e1;{% endif %}">
+        <div class="aviso-item {% if aviso.id not in lidos %}border-left-unread{% endif %}" style="{% if aviso.id not in lidos %}border-left: 4px solid var(--ambar); background-color: #fff8e1;{% endif %}">
             <div class="d-flex justify-content-between align-items-start gap-3">
                 <div>
                     <strong class="titulo-secao">
@@ -38,19 +41,14 @@
                         <span class="badge" style="background-color: var(--ambar); font-size: 0.7rem;">NOVO</span>
                         {% endif %}
                     </strong>
-
                     <small class="text-muted d-block">
-                        <i class="bi bi-calendar"></i>
-                        {{ aviso.data_publicacao.strftime('%d/%m/%Y às %H:%M') }}
+                        <i class="bi bi-calendar"></i> {{ aviso.data_publicacao.strftime('%d/%m/%Y às %H:%M') }}
                     </small>
-
                     <div class="mt-2 mb-0" style="white-space: pre-line;">{{ aviso.conteudo }}</div>
                 </div>
 
                 {% if aviso.id not in lidos %}
-                <a href="/dashboard/avisos/marcar-lido/{{ aviso.id }}"
-                   class="btn btn-sm btn-outline-success ms-3"
-                   title="Marcar como lido">
+                <a href="/dashboard/avisos/marcar-lido/{{ aviso.id }}" class="btn btn-sm btn-outline-success ms-3" title="Marcar como lido">
                     <i class="bi bi-check2-circle"></i> Marcar lido
                 </a>
                 {% else %}

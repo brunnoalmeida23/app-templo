@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block back_button %}{% endblock %}
+
+{% block title %}{{ titulo_pagina }} - TUPBAO{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <h2 class="titulo-secao mb-1">
+                {% if publico == 'interno' %}
+                <i class="bi bi-house-heart"></i>
+                {% elif publico == 'publico' %}
+                <i class="bi bi-broadcast"></i>
+                {% else %}
+                <i class="bi bi-mortarboard"></i>
+                {% endif %}
+                {{ titulo_pagina }}
+            </h2>
+            <p class="text-muted mb-0">{{ descricao }}</p>
+        </div>
+
+        {% if publico == 'interno' %}
+        <a href="/dashboard/avisos/internos" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Avisos Internos
+        </a>
+        {% elif publico == 'publico' %}
+        <a href="/dashboard/avisos/publicos" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Público / Consulentes
+        </a>
+        {% else %}
+        <a href="/dashboard/avisos/cursos" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Cursos
+        </a>
+        {% endif %}
+    </div>
+
+    <hr class="linha-ambar-left">
+
+    <div class="card shadow-sm">
+        <div class="card-body p-4">
+            {% if turma %}
+            <div class="alert alert-info">
+                <strong>Turma:</strong> {{ turma.curso_nome }} — {{ turma.turma_nome }}
+            </div>
+            {% endif %}
+
+            <form method="POST">
+                <div class="mb-3">
+                    <label class="form-label"><i class="bi bi-pencil"></i> Título</label>
+                    <input type="text" name="titulo" class="form-control" required maxlength="200" placeholder="Digite o título do aviso">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label"><i class="bi bi-text-paragraph"></i> Mensagem</label>
+                    <textarea name="conteudo" class="form-control" rows="7" required placeholder="Digite a mensagem..."></textarea>
+                </div>
+
+                <div class="alert alert-warning">
+                    <i class="bi bi-shield-check"></i>
+                    <strong>Destinatários:</strong>
+                    {% if publico == 'interno' %}
+                    somente filhos da casa.
+                    {% elif publico == 'publico' %}
+                    público externo e consulentes.
+                    {% else %}
+                    somente alunos desta turma.
+                    {% endif %}
+                </div>
+
+                <div class="d-flex gap-2 flex-wrap">
+                    <button type="submit" class="btn btn-ambar">
+                        <i class="bi bi-send"></i> Publicar Aviso
+                    </button>
+
+                    {% if publico == 'interno' %}
+                    <a href="/dashboard/avisos/internos" class="btn btn-outline-secondary">Cancelar</a>
+                    {% elif publico == 'publico' %}
+                    <a href="/dashboard/avisos/publicos" class="btn btn-outline-secondary">Cancelar</a>
+                    {% else %}
+                    <a href="/dashboard/avisos/cursos" class="btn btn-outline-secondary">Cancelar</a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

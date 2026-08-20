@@ -211,6 +211,34 @@ def pode_gerenciar_equipes_limpeza():
 def enviar_notificacao(titulo, mensagem):
     return enviar_notificacao_service(titulo, mensagem)
 
+
+def normalizar_telefone(telefone):
+    numeros = ''.join(filter(str.isdigit, telefone or ''))
+
+    # Armazena sempre no padrão nacional, somente números.
+    # Ex.: +55 (11) 99999-9999 -> 11999999999
+    if numeros.startswith('55') and len(numeros) in (12, 13):
+        numeros = numeros[2:]
+
+    return numeros
+
+
+def formatar_telefone_br(telefone):
+    numeros = normalizar_telefone(telefone)
+
+    if len(numeros) == 11:
+        return f'({numeros[:2]}) {numeros[2:7]}-{numeros[7:]}'
+
+    if len(numeros) == 10:
+        return f'({numeros[:2]}) {numeros[2:6]}-{numeros[6:]}'
+
+    return telefone or ''
+
+
+@app.template_filter('telefone_br')
+def telefone_br_filter(telefone):
+    return formatar_telefone_br(telefone)
+
 # ============ ROTAS PÚBLICAS ============
 
 @app.route('/')
@@ -245,16 +273,79 @@ def guia():
 def notificacoes_publicas():
     return render_template('notificacoes.html')
 
-@app.route('/curso/<int:turma_id>/notificacoes')
+@app.route(
+    '/curso/<int:turma_id>/notificacoes',
+    methods=['GET', 'POST']
+)
 def notificacoes_curso(turma_id):
     turma = TurmaCurso.query.filter_by(
         id=turma_id,
         ativo=True
     ).first_or_404()
 
+    chave_autorizacao = f'curso_autorizado_{turma.id}'
+    chave_aluno_nome = f'curso_aluno_nome_{turma.id}'
+
+    autorizado = bool(session.get(chave_autorizacao, False))
+    aluno_nome = session.get(chave_aluno_nome)
+
+    if request.method == 'POST':
+        nome_informado = request.form.get('nome', '').strip()
+        telefone = normalizar_telefone(
+            request.form.get('telefone', '')
+        )
+
+        if not nome_informado or not telefone:
+            flash('Informe seu nome e WhatsApp.')
+            return redirect(
+                url_for(
+                    'notificacoes_curso',
+                    turma_id=turma.id
+                )
+            )
+
+        if len(telefone) not in (10, 11):
+            flash('Informe um WhatsApp válido com DDD.')
+            return redirect(
+                url_for(
+                    'notificacoes_curso',
+                    turma_id=turma.id
+                )
+            )
+
+        aluno = AlunoCurso.query.filter_by(
+            turma_curso_id=turma.id,
+            telefone=telefone,
+            ativo=True,
+            matricula_confirmada=True
+        ).first()
+
+        if not aluno:
+            session.pop(chave_autorizacao, None)
+            session.pop(chave_aluno_nome, None)
+
+            flash(
+                'Não encontramos uma matrícula ativa para este WhatsApp.'
+            )
+
+            return redirect(
+                url_for(
+                    'notificacoes_curso',
+                    turma_id=turma.id
+                )
+            )
+
+        session[chave_autorizacao] = True
+        session[chave_aluno_nome] = aluno.nome
+
+        autorizado = True
+        aluno_nome = aluno.nome
+
     return render_template(
         'notificacoes_curso.html',
-        turma=turma
+        turma=turma,
+        autorizado=autorizado,
+        aluno_nome=aluno_nome
     )
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -569,11 +660,8 @@ def cadastrar_aluno_curso(turma_id):
 
     nome = request.form.get('nome', '').strip()
 
-    telefone = ''.join(
-        filter(
-            str.isdigit,
-            request.form.get('telefone', '')
-        )
+    telefone = normalizar_telefone(
+        request.form.get('telefone', '')
     )
 
     if not nome or not telefone:
@@ -585,7 +673,7 @@ def cadastrar_aluno_curso(turma_id):
             )
         )
 
-    if len(telefone) < 10 or len(telefone) > 13:
+    if len(telefone) not in (10, 11):
         flash('Informe um WhatsApp válido com DDD.')
         return redirect(
             url_for(

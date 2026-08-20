@@ -19,10 +19,7 @@
             </p>
         </div>
 
-        <a
-            href="/dashboard/avisos/cursos"
-            class="btn btn-outline-secondary"
-        >
+        <a href="/dashboard/avisos/cursos" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left"></i>
             Voltar para Cursos
         </a>
@@ -33,26 +30,16 @@
     {% with messages = get_flashed_messages() %}
         {% if messages %}
             {% for message in messages %}
-                <div
-                    class="alert alert-info alert-dismissible fade show"
-                    role="alert"
-                >
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
                     {{ message }}
-
-                    <button
-                        type="button"
-                        class="btn-close"
-                        data-bs-dismiss="alert"
-                    ></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             {% endfor %}
         {% endif %}
     {% endwith %}
 
-
     <div class="card shadow-sm mb-4">
         <div class="card-body">
-
             <h5 class="titulo-secao mb-3">
                 <i class="bi bi-person-plus"></i>
                 Adicionar aluno
@@ -63,12 +50,8 @@
                 action="/dashboard/avisos/cursos/{{ turma.id }}/alunos/novo"
                 class="row g-3"
             >
-
                 <div class="col-md-6">
-                    <label class="form-label">
-                        Nome
-                    </label>
-
+                    <label class="form-label">Nome</label>
                     <input
                         type="text"
                         name="nome"
@@ -79,34 +62,30 @@
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label">
-                        WhatsApp
-                    </label>
-
+                    <label class="form-label">WhatsApp</label>
                     <input
                         type="tel"
                         name="telefone"
                         class="form-control"
                         placeholder="Ex.: (11) 99999-9999"
+                        inputmode="tel"
                         required
                     >
                 </div>
 
                 <div class="col-12">
-                    <button
-                        type="submit"
-                        class="btn btn-ambar"
-                    >
+                    <button type="submit" class="btn btn-ambar">
                         <i class="bi bi-plus-lg"></i>
                         Adicionar aluno
                     </button>
                 </div>
-
             </form>
 
+            <small class="text-muted d-block mt-2">
+                O sistema guarda o telefone somente com números e exibe formatado na tela.
+            </small>
         </div>
     </div>
-
 
     <div class="card shadow-sm">
         <div class="card-body">
@@ -123,10 +102,8 @@
             </div>
 
             {% if alunos %}
-
                 <div class="table-responsive">
                     <table class="table align-middle">
-
                         <thead>
                             <tr>
                                 <th>Nome</th>
@@ -137,82 +114,51 @@
                         </thead>
 
                         <tbody>
-
                             {% for aluno in alunos %}
-
                             <tr>
-                                <td>
-                                    {{ aluno.nome }}
-                                </td>
-
-                                <td>
-                                    {{ aluno.telefone }}
-                                </td>
+                                <td>{{ aluno.nome }}</td>
+                                <td>{{ aluno.telefone|telefone_br }}</td>
 
                                 <td>
                                     {% if aluno.ativo and aluno.matricula_confirmada %}
-                                        <span class="badge bg-success">
-                                            Ativo
-                                        </span>
+                                        <span class="badge bg-success">Ativo</span>
                                     {% else %}
-                                        <span class="badge bg-secondary">
-                                            Inativo
-                                        </span>
+                                        <span class="badge bg-secondary">Inativo</span>
                                     {% endif %}
                                 </td>
 
                                 <td class="text-end">
-
                                     {% if aluno.ativo %}
-
                                     <form
                                         method="POST"
                                         action="/dashboard/avisos/cursos/{{ turma.id }}/alunos/{{ aluno.id }}/desativar"
                                         class="d-inline"
                                         onsubmit="return confirm('Desativar {{ aluno.nome }} desta turma?');"
                                     >
-
-                                        <button
-                                            type="submit"
-                                            class="btn btn-sm btn-outline-danger"
-                                        >
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
                                             <i class="bi bi-person-x"></i>
                                             Desativar
                                         </button>
-
                                     </form>
-
                                     {% else %}
-
-                                        <span class="text-muted small">
-                                            Desativado
-                                        </span>
-
+                                        <span class="text-muted small">Desativado</span>
                                     {% endif %}
-
                                 </td>
                             </tr>
-
                             {% endfor %}
-
                         </tbody>
-
                     </table>
                 </div>
-
             {% else %}
-
                 <div class="text-center py-4">
                     <i
                         class="bi bi-person-plus"
                         style="font-size: 2rem; color: var(--roxo);"
                     ></i>
-
                     <p class="text-muted mt-2 mb-0">
                         Nenhum aluno cadastrado nesta turma.
                     </p>
                 </div>
-
             {% endif %}
 
         </div>

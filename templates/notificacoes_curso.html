@@ -15,40 +15,123 @@
                         style="font-size: 3rem; color: var(--ambar);"
                     ></i>
 
-                    <h2 class="titulo-secao mt-3">
+                    <h2 class="titulo-secao mt-3 mb-1">
                         {{ turma.curso_nome }}
                     </h2>
 
-                    <h5 class="text-muted">
+                    <h5 class="text-muted mb-4">
                         {{ turma.turma_nome }}
                     </h5>
 
-                    <p class="mt-4">
-                        Ative as notificações para receber comunicados
-                        exclusivos desta turma.
-                    </p>
+                    {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-warning text-start" role="alert">
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
 
-                    <p class="small text-muted">
-                        Não é necessário criar uma conta no TUPBAO.
-                    </p>
+                    {% if not autorizado %}
 
-                    <div
-                        id="statusNotificacao"
-                        class="alert alert-secondary mt-4"
-                    >
-                        Verificando disponibilidade das notificações...
-                    </div>
+                        <p class="mb-2">
+                            Confirme seus dados para acessar os comunicados desta turma.
+                        </p>
 
-                    <button
-                        type="button"
-                        id="btnAtivarPush"
-                        class="btn btn-lg mt-2"
-                        style="background-color: var(--ambar); color: #fff;"
-                        onclick="ativarAvisosTurma()"
-                    >
-                        <i class="bi bi-bell"></i>
-                        Ativar avisos desta turma
-                    </button>
+                        <p class="small text-muted mb-4">
+                            Use o mesmo WhatsApp informado na matrícula.
+                        </p>
+
+                        <form
+                            method="POST"
+                            action="{{ url_for('notificacoes_curso', turma_id=turma.id) }}"
+                            class="text-start"
+                        >
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    Nome
+                                </label>
+
+                                <input
+                                    type="text"
+                                    name="nome"
+                                    class="form-control"
+                                    placeholder="Seu nome"
+                                    autocomplete="name"
+                                    required
+                                >
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label">
+                                    WhatsApp
+                                </label>
+
+                                <input
+                                    type="tel"
+                                    name="telefone"
+                                    id="telefoneAluno"
+                                    class="form-control"
+                                    placeholder="(11) 99999-9999"
+                                    inputmode="tel"
+                                    autocomplete="tel"
+                                    maxlength="15"
+                                    required
+                                >
+
+                                <small class="text-muted">
+                                    Digite o número com DDD.
+                                </small>
+                            </div>
+
+                            <button
+                                type="submit"
+                                class="btn btn-ambar w-100"
+                            >
+                                <i class="bi bi-shield-check"></i>
+                                Validar matrícula
+                            </button>
+                        </form>
+
+                    {% else %}
+
+                        <div class="alert alert-success text-start">
+                            <i class="bi bi-check-circle-fill"></i>
+                            <strong>Matrícula localizada.</strong>
+
+                            {% if aluno_nome %}
+                                <br>
+                                Olá, {{ aluno_nome }}.
+                            {% endif %}
+                        </div>
+
+                        <p class="mt-4 mb-2">
+                            Ative as notificações para receber os avisos exclusivos desta turma.
+                        </p>
+
+                        <p class="small text-muted">
+                            Você receberá somente os comunicados vinculados a esta turma.
+                        </p>
+
+                        <div
+                            id="statusNotificacao"
+                            class="alert alert-secondary mt-4"
+                        >
+                            Verificando disponibilidade das notificações...
+                        </div>
+
+                        <button
+                            type="button"
+                            id="btnAtivarPush"
+                            class="btn btn-ambar btn-lg mt-2"
+                            onclick="ativarAvisosTurma()"
+                        >
+                            <i class="bi bi-bell"></i>
+                            Ativar avisos desta turma
+                        </button>
+
+                    {% endif %}
 
                 </div>
             </div>
@@ -60,6 +143,45 @@
 
 
 {% block extra_scripts %}
+
+{% if not autorizado %}
+<script>
+    const telefoneAluno = document.getElementById('telefoneAluno');
+
+    if (telefoneAluno) {
+        telefoneAluno.addEventListener('input', function () {
+            let valor = this.value.replace(/\D/g, '').slice(0, 11);
+
+            if (valor.length > 10) {
+                valor = valor.replace(
+                    /^(\d{2})(\d{5})(\d{0,4}).*/,
+                    '($1) $2-$3'
+                );
+            } else if (valor.length > 6) {
+                valor = valor.replace(
+                    /^(\d{2})(\d{4})(\d{0,4}).*/,
+                    '($1) $2-$3'
+                );
+            } else if (valor.length > 2) {
+                valor = valor.replace(
+                    /^(\d{2})(\d+)/,
+                    '($1) $2'
+                );
+            } else if (valor.length > 0) {
+                valor = valor.replace(
+                    /^(\d{0,2})/,
+                    '($1'
+                );
+            }
+
+            this.value = valor;
+        });
+    }
+</script>
+{% endif %}
+
+
+{% if autorizado %}
 <script>
     let oneSignalTurma = null;
 
@@ -74,37 +196,46 @@
         const status = document.getElementById('statusNotificacao');
         const botao = document.getElementById('btnAtivarPush');
 
-        if (!OneSignal.Notifications.isPushSupported()) {
-            status.className = 'alert alert-warning mt-4';
+        try {
+            if (!OneSignal.Notifications.isPushSupported()) {
+                status.className = 'alert alert-warning mt-4';
+                status.innerHTML =
+                    '<strong>Este navegador não oferece suporte às notificações.</strong>';
+
+                botao.disabled = true;
+                return;
+            }
+
+            const tags = await OneSignal.User.getTags();
+
+            if (
+                OneSignal.Notifications.permission &&
+                tags &&
+                tags[tagTurma] === '1'
+            ) {
+                status.className = 'alert alert-success mt-4';
+                status.innerHTML =
+                    '<i class="bi bi-check-circle-fill"></i> ' +
+                    '<strong>Você já recebe os avisos desta turma.</strong>';
+
+                botao.innerHTML =
+                    '<i class="bi bi-check-lg"></i> Avisos ativados';
+
+                botao.disabled = true;
+                return;
+            }
+
+            status.className = 'alert alert-info mt-4';
             status.innerHTML =
-                '<strong>Este navegador não oferece suporte às notificações.</strong>';
+                'Clique abaixo para ativar os avisos exclusivos desta turma.';
 
-            botao.disabled = true;
-            return;
-        }
+        } catch (erro) {
+            console.error('[TUPBAO Curso Push - inicialização]', erro);
 
-        const tags = OneSignal.User.getTags();
-
-        if (
-            OneSignal.Notifications.permission &&
-            tags &&
-            tags[tagTurma] === '1'
-        ) {
-            status.className = 'alert alert-success mt-4';
+            status.className = 'alert alert-info mt-4';
             status.innerHTML =
-                '<i class="bi bi-check-circle-fill"></i> ' +
-                '<strong>Você já recebe os avisos desta turma.</strong>';
-
-            botao.innerHTML =
-                '<i class="bi bi-check-lg"></i> Avisos ativados';
-
-            botao.disabled = true;
-            return;
+                'Clique abaixo para ativar os avisos exclusivos desta turma.';
         }
-
-        status.className = 'alert alert-info mt-4';
-        status.innerHTML =
-            'Clique abaixo para receber os comunicados exclusivos desta turma.';
     });
 
 
@@ -138,7 +269,7 @@
 
             await oneSignalTurma.User.PushSubscription.optIn();
 
-            oneSignalTurma.User.addTag(
+            await oneSignalTurma.User.addTag(
                 tagTurma,
                 '1'
             );
@@ -165,4 +296,6 @@
         }
     }
 </script>
+{% endif %}
+
 {% endblock %}

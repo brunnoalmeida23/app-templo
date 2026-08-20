@@ -15,7 +15,7 @@
         </div>
 
         <div class="d-flex gap-2 flex-wrap">
-            {% if session.funcao in ['super_admin', 'limpezas'] %}
+            {% if session.funcao == 'super_admin' or session.gerencia_limpezas %}
             <a href="/admin/limpezas/equipes" class="btn btn-outline-primary">
                 <i class="bi bi-people"></i> Gerenciar Equipes
             </a>

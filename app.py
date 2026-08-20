@@ -19,12 +19,27 @@ class Usuario(db.Model):
     nome = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     senha = db.Column(db.String(200), nullable=False)
+
+    # Compatibilidade com o sistema atual
     is_admin = db.Column(db.Boolean, default=False)
     funcao = db.Column(db.String(50), default='membro')
+
+    # Dados da conta
     ultimo_acesso = db.Column(db.DateTime, nullable=True)
     ativo = db.Column(db.Boolean, default=True)
     grupo_limpeza = db.Column(db.Integer, nullable=True)
     celular = db.Column(db.String(20), nullable=True)
+
+    # Perfil / participação na casa
+    tipo_conta = db.Column(db.String(20), nullable=False, default='membro')
+    cargo_casa = db.Column(db.String(30), nullable=False, default='membro')
+    participa_mensalidade = db.Column(db.Boolean, nullable=False, default=True)
+    participa_limpeza = db.Column(db.Boolean, nullable=False, default=True)
+
+    # Permissões específicas
+    gerencia_limpezas = db.Column(db.Boolean, nullable=False, default=False)
+    gerencia_mensalidades = db.Column(db.Boolean, nullable=False, default=False)
+    gerencia_financeiro = db.Column(db.Boolean, nullable=False, default=False)
 
 class AvisoLido(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -85,20 +100,47 @@ class Publicacao(db.Model):
 def pode_gerenciar(tipo=None):
     if 'user_id' not in session:
         return False
+
     funcao = session.get('funcao', 'membro')
-    if funcao in ['super_admin', 'admin']:
+
+    if funcao == 'super_admin':
         return True
-    if funcao == 'tesouraria' and tipo == 'financeiro':
+
+    if funcao == 'admin':
         return True
-    if funcao == 'limpezas' and tipo == 'limpeza':
+
+    if tipo == 'limpeza' and session.get('gerencia_limpezas', False):
         return True
+
+    if tipo == 'financeiro' and session.get('gerencia_financeiro', False):
+        return True
+
+    if tipo == 'mensalidades' and session.get('gerencia_mensalidades', False):
+        return True
+
     return False
+
 
 def pode_gerenciar_usuarios():
     return session.get('funcao') == 'super_admin'
 
+
 def pode_gerenciar_tesouraria():
-    return session.get('user_nome') in ['Flavia', 'Lilian', 'Roberto', 'Dirigente']
+    if session.get('funcao') == 'super_admin':
+        return True
+
+    return (
+        session.get('gerencia_financeiro', False)
+        or session.get('gerencia_mensalidades', False)
+    )
+
+
+def pode_gerenciar_equipes_limpeza():
+    if session.get('funcao') == 'super_admin':
+        return True
+
+    return session.get('gerencia_limpezas', False)
+
 
 def enviar_notificacao(titulo, mensagem):
     try:
@@ -157,6 +199,15 @@ def login():
             session['user_nome'] = user.nome
             session['is_admin'] = user.is_admin
             session['funcao'] = user.funcao
+
+            session['tipo_conta'] = user.tipo_conta
+            session['cargo_casa'] = user.cargo_casa
+            session['participa_mensalidade'] = user.participa_mensalidade
+            session['participa_limpeza'] = user.participa_limpeza
+            session['gerencia_limpezas'] = user.gerencia_limpezas
+            session['gerencia_mensalidades'] = user.gerencia_mensalidades
+            session['gerencia_financeiro'] = user.gerencia_financeiro
+
             session['ultimo_acesso_anterior'] = user.ultimo_acesso
             user.ultimo_acesso = datetime.utcnow()
             db.session.commit()
@@ -219,7 +270,7 @@ def ver_limpezas():
 
     membros = (
         Usuario.query
-        .filter_by(ativo=True)
+        .filter_by(ativo=True, participa_limpeza=True)
         .filter(Usuario.grupo_limpeza.isnot(None))
         .order_by(Usuario.nome.asc())
         .all()
@@ -329,8 +380,12 @@ def mensalidades():
         flash('Acesso restrito à tesouraria.')
         return redirect(url_for('dashboard'))
     mes_atual = datetime.utcnow().strftime('%m/%Y')
-    isentos = ['Roberto', 'Thais', 'Rafael', 'Vera', 'Flavia', 'Marlon', 'Dirigente', 'Super-Admin']
-    membros = Usuario.query.filter_by(ativo=True).filter(Usuario.nome.notin_(isentos)).order_by(Usuario.nome).all()
+    membros = (
+        Usuario.query
+        .filter_by(ativo=True, participa_mensalidade=True)
+        .order_by(Usuario.nome.asc())
+        .all()
+    )
     if request.method == 'POST':
         for membro in membros:
             novo_status = request.form.get(f'status_{membro.id}', 'pendente')
@@ -362,8 +417,12 @@ def enviar_cobranca():
     mes_atual = datetime.utcnow().strftime('%m/%Y')
     dia = datetime.utcnow().day
     if dia < 10: flash('Só pode enviar cobrança a partir do dia 10.'); return redirect(url_for('mensalidades'))
-    isentos = ['Roberto', 'Thais', 'Rafael', 'Vera', 'Flavia', 'Marlon', 'Dirigente', 'Super-Admin']
-    membros = Usuario.query.filter_by(ativo=True).filter(Usuario.nome.notin_(isentos)).all()
+    membros = (
+        Usuario.query
+        .filter_by(ativo=True, participa_mensalidade=True)
+        .order_by(Usuario.nome.asc())
+        .all()
+    )
     pendentes = []
     for m in membros:
         msg = Mensalidade.query.filter_by(usuario_id=m.id, mes_ano=mes_atual).first()
@@ -416,7 +475,7 @@ def gerenciar_equipes_limpeza():
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
-    if session.get('funcao') not in ['super_admin', 'limpezas']:
+    if not pode_gerenciar_equipes_limpeza():
         flash('Acesso restrito à gestão das equipes de limpeza.')
         return redirect(url_for('dashboard'))
 
@@ -436,7 +495,7 @@ def gerenciar_equipes_limpeza():
 
     membros = (
         Usuario.query
-        .filter_by(ativo=True)
+        .filter_by(ativo=True, participa_limpeza=True)
         .order_by(Usuario.nome.asc())
         .all()
     )
@@ -464,7 +523,7 @@ def criar_equipe_limpeza():
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
-    if session.get('funcao') not in ['super_admin', 'limpezas']:
+    if not pode_gerenciar_equipes_limpeza():
         flash('Acesso restrito à gestão das equipes de limpeza.')
         return redirect(url_for('dashboard'))
 
@@ -491,7 +550,7 @@ def editar_periodo_equipe(numero):
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
-    if session.get('funcao') not in ['super_admin', 'limpezas']:
+    if not pode_gerenciar_equipes_limpeza():
         flash('Acesso restrito à gestão das equipes de limpeza.')
         return redirect(url_for('dashboard'))
 
@@ -516,7 +575,7 @@ def adicionar_membro_equipe(numero):
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
-    if session.get('funcao') not in ['super_admin', 'limpezas']:
+    if not pode_gerenciar_equipes_limpeza():
         flash('Acesso restrito à gestão das equipes de limpeza.')
         return redirect(url_for('dashboard'))
 
@@ -527,7 +586,11 @@ def adicionar_membro_equipe(numero):
         flash('Selecione um membro.')
         return redirect(url_for('gerenciar_equipes_limpeza'))
 
-    membro = Usuario.query.filter_by(id=usuario_id, ativo=True).first_or_404()
+    membro = Usuario.query.filter_by(
+        id=usuario_id,
+        ativo=True,
+        participa_limpeza=True
+    ).first_or_404()
     membro.grupo_limpeza = equipe.numero
     db.session.commit()
 
@@ -540,7 +603,7 @@ def remover_membro_equipe(numero, usuario_id):
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
-    if session.get('funcao') not in ['super_admin', 'limpezas']:
+    if not pode_gerenciar_equipes_limpeza():
         flash('Acesso restrito à gestão das equipes de limpeza.')
         return redirect(url_for('dashboard'))
 
@@ -561,7 +624,7 @@ def desativar_equipe_limpeza(numero):
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
-    if session.get('funcao') not in ['super_admin', 'limpezas']:
+    if not pode_gerenciar_equipes_limpeza():
         flash('Acesso restrito à gestão das equipes de limpeza.')
         return redirect(url_for('dashboard'))
 
@@ -583,7 +646,7 @@ def reativar_equipe_limpeza(numero):
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
-    if session.get('funcao') not in ['super_admin', 'limpezas']:
+    if not pode_gerenciar_equipes_limpeza():
         flash('Acesso restrito à gestão das equipes de limpeza.')
         return redirect(url_for('dashboard'))
 
@@ -603,7 +666,7 @@ def gerenciar_grupos_limpeza():
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
-    if session.get('funcao') not in ['super_admin', 'limpezas']:
+    if not pode_gerenciar_equipes_limpeza():
         flash('Acesso restrito ao gerenciamento de limpezas.')
         return redirect(url_for('dashboard'))
 
@@ -821,7 +884,20 @@ def resetar_banco():
 
 def criar_admin_inicial():
     if not Usuario.query.filter_by(email='admin@templo.com').first():
-        admin = Usuario(nome='Dirigente', email='admin@templo.com', senha=generate_password_hash('mudar123'), is_admin=True, funcao='super_admin')
+        admin = Usuario(
+            nome='Administrador',
+            email='admin@templo.com',
+            senha=generate_password_hash('mudar123'),
+            is_admin=True,
+            funcao='super_admin',
+            tipo_conta='sistema',
+            cargo_casa='sistema',
+            participa_mensalidade=False,
+            participa_limpeza=False,
+            gerencia_limpezas=False,
+            gerencia_mensalidades=False,
+            gerencia_financeiro=False
+        )
         db.session.add(admin); db.session.commit()
         print("✅ Super Admin criado: admin@templo.com / mudar123")
 

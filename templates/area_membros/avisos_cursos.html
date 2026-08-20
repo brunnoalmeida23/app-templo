@@ -70,7 +70,6 @@
                     >
                 </div>
 
-
                 <div class="col-md-6">
                     <label class="form-label">
                         Identificação da turma
@@ -85,7 +84,6 @@
                     >
                 </div>
 
-
                 <div class="col-md-6">
                     <label class="form-label">
                         Data de início
@@ -98,7 +96,6 @@
                     >
                 </div>
 
-
                 <div class="col-md-6">
                     <label class="form-label">
                         Data prevista de término
@@ -110,7 +107,6 @@
                         class="form-control"
                     >
                 </div>
-
 
                 <div class="col-12">
                     <button
@@ -159,7 +155,6 @@
                                 </div>
                             </div>
 
-
                             <form
                                 method="POST"
                                 action="/dashboard/avisos/cursos/{{ turma.id }}/desativar"
@@ -187,7 +182,6 @@
                             </div>
                             {% endif %}
 
-
                             {% if turma.data_fim %}
                             <div class="small text-muted">
                                 <i class="bi bi-calendar-check"></i>
@@ -198,9 +192,7 @@
 
                         </div>
 
-
                         <hr>
-
 
                         <div class="d-grid gap-2">
 
@@ -212,6 +204,13 @@
                                 Novo Aviso
                             </a>
 
+                            <a
+                                href="/dashboard/avisos/cursos/{{ turma.id }}/alunos"
+                                class="btn btn-outline-dark"
+                            >
+                                <i class="bi bi-people"></i>
+                                Gerenciar Alunos
+                            </a>
 
                             <a
                                 href="/curso/{{ turma.id }}/notificacoes"
@@ -221,7 +220,6 @@
                                 <i class="bi bi-bell"></i>
                                 Abrir inscrição para notificações
                             </a>
-
 
                             <button
                                 type="button"
@@ -233,7 +231,6 @@
                             </button>
 
                         </div>
-
 
                         <div class="mt-3">
                             <small class="text-muted">

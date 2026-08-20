@@ -528,6 +528,151 @@ def desativar_turma_curso(turma_id):
 
     return redirect(url_for('ver_avisos_cursos'))
 
+@app.route('/dashboard/avisos/cursos/<int:turma_id>/alunos')
+def gerenciar_alunos_curso(turma_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    if session.get('funcao') not in ['super_admin', 'admin']:
+        flash('Acesso restrito.')
+        return redirect(url_for('ver_avisos_internos'))
+
+    turma = TurmaCurso.query.get_or_404(turma_id)
+
+    alunos = (
+        AlunoCurso.query
+        .filter_by(turma_curso_id=turma.id)
+        .order_by(AlunoCurso.nome.asc())
+        .all()
+    )
+
+    return render_template(
+        'area_membros/alunos_curso.html',
+        turma=turma,
+        alunos=alunos
+    )
+
+
+@app.route(
+    '/dashboard/avisos/cursos/<int:turma_id>/alunos/novo',
+    methods=['POST']
+)
+def cadastrar_aluno_curso(turma_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    if session.get('funcao') not in ['super_admin', 'admin']:
+        flash('Acesso restrito.')
+        return redirect(url_for('ver_avisos_internos'))
+
+    turma = TurmaCurso.query.get_or_404(turma_id)
+
+    nome = request.form.get('nome', '').strip()
+
+    telefone = ''.join(
+        filter(
+            str.isdigit,
+            request.form.get('telefone', '')
+        )
+    )
+
+    if not nome or not telefone:
+        flash('Nome e WhatsApp são obrigatórios.')
+        return redirect(
+            url_for(
+                'gerenciar_alunos_curso',
+                turma_id=turma.id
+            )
+        )
+
+    if len(telefone) < 10 or len(telefone) > 13:
+        flash('Informe um WhatsApp válido com DDD.')
+        return redirect(
+            url_for(
+                'gerenciar_alunos_curso',
+                turma_id=turma.id
+            )
+        )
+
+    existente = AlunoCurso.query.filter_by(
+        turma_curso_id=turma.id,
+        telefone=telefone
+    ).first()
+
+    if existente:
+        if existente.ativo:
+            flash('Este WhatsApp já está cadastrado nesta turma.')
+        else:
+            existente.nome = nome
+            existente.ativo = True
+            existente.matricula_confirmada = True
+            db.session.commit()
+
+            flash(
+                f'✅ {nome} foi reativado(a) nesta turma.'
+            )
+
+        return redirect(
+            url_for(
+                'gerenciar_alunos_curso',
+                turma_id=turma.id
+            )
+        )
+
+    aluno = AlunoCurso(
+        turma_curso_id=turma.id,
+        nome=nome,
+        telefone=telefone,
+        ativo=True,
+        matricula_confirmada=True
+    )
+
+    db.session.add(aluno)
+    db.session.commit()
+
+    flash(
+        f'✅ {nome} adicionado(a) à turma.'
+    )
+
+    return redirect(
+        url_for(
+            'gerenciar_alunos_curso',
+            turma_id=turma.id
+        )
+    )
+
+
+@app.route(
+    '/dashboard/avisos/cursos/<int:turma_id>/alunos/<int:aluno_id>/desativar',
+    methods=['POST']
+)
+def desativar_aluno_curso(turma_id, aluno_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    if session.get('funcao') not in ['super_admin', 'admin']:
+        flash('Acesso restrito.')
+        return redirect(url_for('ver_avisos_internos'))
+
+    aluno = AlunoCurso.query.filter_by(
+        id=aluno_id,
+        turma_curso_id=turma_id
+    ).first_or_404()
+
+    aluno.ativo = False
+    db.session.commit()
+
+    flash(
+        f'✅ {aluno.nome} foi desativado(a) nesta turma.'
+    )
+
+    return redirect(
+        url_for(
+            'gerenciar_alunos_curso',
+            turma_id=turma_id
+        )
+    )
+
 @app.route('/dashboard/avisos/novo/<publico>', methods=['GET', 'POST'])
 def novo_aviso(publico):
     if 'user_id' not in session:

@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block back_button %}{% endblock %}
+
+{% block title %}Alunos da Turma - TUPBAO{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <h2 class="titulo-secao mb-1">
+                <i class="bi bi-people"></i>
+                Alunos da Turma
+            </h2>
+
+            <p class="text-muted mb-0">
+                {{ turma.curso_nome }} — {{ turma.turma_nome }}
+            </p>
+        </div>
+
+        <a
+            href="/dashboard/avisos/cursos"
+            class="btn btn-outline-secondary"
+        >
+            <i class="bi bi-arrow-left"></i>
+            Voltar para Cursos
+        </a>
+    </div>
+
+    <hr class="linha-ambar-left">
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div
+                    class="alert alert-info alert-dismissible fade show"
+                    role="alert"
+                >
+                    {{ message }}
+
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                    ></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+
+            <h5 class="titulo-secao mb-3">
+                <i class="bi bi-person-plus"></i>
+                Adicionar aluno
+            </h5>
+
+            <form
+                method="POST"
+                action="/dashboard/avisos/cursos/{{ turma.id }}/alunos/novo"
+                class="row g-3"
+            >
+
+                <div class="col-md-6">
+                    <label class="form-label">
+                        Nome
+                    </label>
+
+                    <input
+                        type="text"
+                        name="nome"
+                        class="form-control"
+                        placeholder="Nome completo"
+                        required
+                    >
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">
+                        WhatsApp
+                    </label>
+
+                    <input
+                        type="tel"
+                        name="telefone"
+                        class="form-control"
+                        placeholder="Ex.: (11) 99999-9999"
+                        required
+                    >
+                </div>
+
+                <div class="col-12">
+                    <button
+                        type="submit"
+                        class="btn btn-ambar"
+                    >
+                        <i class="bi bi-plus-lg"></i>
+                        Adicionar aluno
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="titulo-secao mb-0">
+                    <i class="bi bi-people-fill"></i>
+                    Alunos cadastrados
+                </h5>
+
+                <span class="badge bg-secondary">
+                    {{ alunos|length }}
+                </span>
+            </div>
+
+            {% if alunos %}
+
+                <div class="table-responsive">
+                    <table class="table align-middle">
+
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>WhatsApp</th>
+                                <th>Status</th>
+                                <th class="text-end">Ação</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            {% for aluno in alunos %}
+
+                            <tr>
+                                <td>
+                                    {{ aluno.nome }}
+                                </td>
+
+                                <td>
+                                    {{ aluno.telefone }}
+                                </td>
+
+                                <td>
+                                    {% if aluno.ativo and aluno.matricula_confirmada %}
+                                        <span class="badge bg-success">
+                                            Ativo
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">
+                                            Inativo
+                                        </span>
+                                    {% endif %}
+                                </td>
+
+                                <td class="text-end">
+
+                                    {% if aluno.ativo %}
+
+                                    <form
+                                        method="POST"
+                                        action="/dashboard/avisos/cursos/{{ turma.id }}/alunos/{{ aluno.id }}/desativar"
+                                        class="d-inline"
+                                        onsubmit="return confirm('Desativar {{ aluno.nome }} desta turma?');"
+                                    >
+
+                                        <button
+                                            type="submit"
+                                            class="btn btn-sm btn-outline-danger"
+                                        >
+                                            <i class="bi bi-person-x"></i>
+                                            Desativar
+                                        </button>
+
+                                    </form>
+
+                                    {% else %}
+
+                                        <span class="text-muted small">
+                                            Desativado
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+                            </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+                </div>
+
+            {% else %}
+
+                <div class="text-center py-4">
+                    <i
+                        class="bi bi-person-plus"
+                        style="font-size: 2rem; color: var(--roxo);"
+                    ></i>
+
+                    <p class="text-muted mt-2 mb-0">
+                        Nenhum aluno cadastrado nesta turma.
+                    </p>
+                </div>
+
+            {% endif %}
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}

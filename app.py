@@ -88,6 +88,18 @@ class Comprovante(db.Model):
     status = db.Column(db.String(20), default='pendente')
     data_envio = db.Column(db.DateTime, default=datetime.utcnow)
 
+class TurmaCurso(db.Model):
+    __tablename__ = 'turma_curso'
+
+    id = db.Column(db.Integer, primary_key=True)
+    curso_nome = db.Column(db.String(120), nullable=False)
+    turma_nome = db.Column(db.String(120), nullable=False)
+    data_inicio = db.Column(db.Date, nullable=True)
+    data_fim = db.Column(db.Date, nullable=True)
+    ativo = db.Column(db.Boolean, nullable=False, default=True)
+    criado_em = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+
 class Publicacao(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     titulo = db.Column(db.String(200), nullable=False)
@@ -95,6 +107,15 @@ class Publicacao(db.Model):
     tipo = db.Column(db.String(50))
     data_evento = db.Column(db.DateTime, nullable=True)
     data_publicacao = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Público da comunicação: interno, publico ou curso.
+    # NULL continua permitido para publicações antigas/legadas.
+    publico = db.Column(db.String(20), nullable=True)
+    turma_curso_id = db.Column(
+        db.Integer,
+        db.ForeignKey('turma_curso.id', ondelete='SET NULL'),
+        nullable=True
+    )
 
 # ============ FUNÇÕES AUXILIARES ============
 
@@ -233,7 +254,18 @@ def dashboard():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     lidos = [al.publicacao_id for al in AvisoLido.query.filter_by(usuario_id=session['user_id']).all()]
-    avisos = Publicacao.query.filter_by(tipo='aviso').order_by(Publicacao.data_publicacao.desc()).all()
+    avisos = (
+        Publicacao.query
+        .filter_by(tipo='aviso')
+        .filter(
+            db.or_(
+                Publicacao.publico == 'interno',
+                Publicacao.publico.is_(None)
+            )
+        )
+        .order_by(Publicacao.data_publicacao.desc())
+        .all()
+    )
     novos_avisos = 0
     for aviso in avisos:
         if aviso.id not in lidos:
@@ -244,19 +276,150 @@ def dashboard():
 def ver_avisos():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    avisos = Publicacao.query.filter_by(tipo='aviso').order_by(Publicacao.data_publicacao.desc()).all()
-    lidos = [al.publicacao_id for al in AvisoLido.query.filter_by(usuario_id=session['user_id']).all()]
-    return render_template('area_membros/avisos.html', avisos=avisos, lidos=lidos)
+
+    # Membro comum vai direto aos recados internos.
+    # Admin/Super Admin recebe o hub para separar os públicos.
+    if session.get('funcao') not in ['super_admin', 'admin']:
+        return redirect(url_for('ver_avisos_internos'))
+
+    turmas_ativas = (
+        TurmaCurso.query
+        .filter_by(ativo=True)
+        .order_by(TurmaCurso.data_inicio.desc(), TurmaCurso.id.desc())
+        .all()
+    )
+
+    qtd_internos = (
+        Publicacao.query
+        .filter_by(tipo='aviso')
+        .filter(
+            db.or_(
+                Publicacao.publico == 'interno',
+                Publicacao.publico.is_(None)
+            )
+        )
+        .count()
+    )
+
+    qtd_publicos = (
+        Publicacao.query
+        .filter_by(tipo='aviso', publico='publico')
+        .count()
+    )
+
+    qtd_cursos = (
+        Publicacao.query
+        .filter_by(tipo='aviso', publico='curso')
+        .count()
+    )
+
+    return render_template(
+        'area_membros/avisos.html',
+        turmas_ativas=turmas_ativas,
+        qtd_internos=qtd_internos,
+        qtd_publicos=qtd_publicos,
+        qtd_cursos=qtd_cursos
+    )
+
+
+@app.route('/dashboard/avisos/internos')
+def ver_avisos_internos():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    avisos = (
+        Publicacao.query
+        .filter_by(tipo='aviso')
+        .filter(
+            db.or_(
+                Publicacao.publico == 'interno',
+                Publicacao.publico.is_(None)
+            )
+        )
+        .order_by(Publicacao.data_publicacao.desc())
+        .all()
+    )
+
+    lidos = [
+        al.publicacao_id
+        for al in AvisoLido.query.filter_by(usuario_id=session['user_id']).all()
+    ]
+
+    return render_template(
+        'area_membros/avisos_internos.html',
+        avisos=avisos,
+        lidos=lidos
+    )
+
+
+@app.route('/dashboard/avisos/publicos')
+def ver_avisos_publicos():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    if session.get('funcao') not in ['super_admin', 'admin']:
+        flash('Acesso restrito.')
+        return redirect(url_for('ver_avisos_internos'))
+
+    avisos = (
+        Publicacao.query
+        .filter_by(tipo='aviso', publico='publico')
+        .order_by(Publicacao.data_publicacao.desc())
+        .all()
+    )
+
+    return render_template(
+        'area_membros/avisos_publicos.html',
+        avisos=avisos
+    )
+
+
+@app.route('/dashboard/avisos/cursos')
+def ver_avisos_cursos():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    if session.get('funcao') not in ['super_admin', 'admin']:
+        flash('Acesso restrito.')
+        return redirect(url_for('ver_avisos_internos'))
+
+    turmas = (
+        TurmaCurso.query
+        .filter_by(ativo=True)
+        .order_by(TurmaCurso.data_inicio.desc(), TurmaCurso.id.desc())
+        .all()
+    )
+
+    return render_template(
+        'area_membros/avisos_cursos.html',
+        turmas=turmas
+    )
+
 
 @app.route('/dashboard/avisos/marcar-lido/<int:id>')
 def marcar_lido(id):
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    if not AvisoLido.query.filter_by(usuario_id=session['user_id'], publicacao_id=id).first():
-        novo = AvisoLido(usuario_id=session['user_id'], publicacao_id=id)
+
+    aviso = Publicacao.query.get_or_404(id)
+
+    # Só recados internos/legados podem ser marcados como lidos por membros.
+    if aviso.tipo != 'aviso' or aviso.publico not in [None, 'interno']:
+        flash('Aviso inválido.')
+        return redirect(url_for('ver_avisos_internos'))
+
+    if not AvisoLido.query.filter_by(
+        usuario_id=session['user_id'],
+        publicacao_id=id
+    ).first():
+        novo = AvisoLido(
+            usuario_id=session['user_id'],
+            publicacao_id=id
+        )
         db.session.add(novo)
         db.session.commit()
-    return redirect(url_for('ver_avisos'))
+
+    return redirect(url_for('ver_avisos_internos'))
 
 @app.route('/dashboard/limpezas')
 def ver_limpezas():

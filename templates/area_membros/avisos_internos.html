@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Avisos Internos - TUPBAO{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <h2 class="titulo-secao mb-1">
+                <i class="bi bi-house-heart"></i> Avisos Internos
+            </h2>
+            <p class="text-muted mb-0">Recados destinados somente aos filhos da casa.</p>
+        </div>
+
+        {% if session.funcao in ['super_admin', 'admin'] %}
+        <a href="/dashboard/avisos" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Central de Avisos
+        </a>
+        {% else %}
+        <a href="/dashboard" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+        {% endif %}
+    </div>
+
+    <hr class="linha-ambar-left">
+
+    {% if avisos %}
+        {% for aviso in avisos %}
+        <div class="aviso-item {% if aviso.id not in lidos %}border-left-unread{% endif %}"
+             style="{% if aviso.id not in lidos %}border-left: 4px solid var(--ambar); background-color: #fff8e1;{% endif %}">
+            <div class="d-flex justify-content-between align-items-start gap-3">
+                <div>
+                    <strong class="titulo-secao">
+                        {{ aviso.titulo }}
+                        {% if aviso.id not in lidos %}
+                        <span class="badge" style="background-color: var(--ambar); font-size: 0.7rem;">NOVO</span>
+                        {% endif %}
+                    </strong>
+
+                    <small class="text-muted d-block">
+                        <i class="bi bi-calendar"></i>
+                        {{ aviso.data_publicacao.strftime('%d/%m/%Y às %H:%M') }}
+                    </small>
+
+                    <div class="mt-2 mb-0" style="white-space: pre-line;">{{ aviso.conteudo }}</div>
+                </div>
+
+                {% if aviso.id not in lidos %}
+                <a href="/dashboard/avisos/marcar-lido/{{ aviso.id }}"
+                   class="btn btn-sm btn-outline-success ms-3"
+                   title="Marcar como lido">
+                    <i class="bi bi-check2-circle"></i> Marcar lido
+                </a>
+                {% else %}
+                <span class="text-muted ms-3" style="font-size: 0.8rem;">
+                    <i class="bi bi-check-circle"></i> Lido
+                </span>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="text-center py-4 bg-white rounded shadow-sm">
+            <i class="bi bi-house-heart" style="font-size: 2rem; color: var(--roxo);"></i>
+            <p class="mt-2 mb-0">Nenhum aviso interno no momento.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

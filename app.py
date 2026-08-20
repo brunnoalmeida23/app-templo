@@ -882,28 +882,71 @@ def admin():
 
 @app.route('/admin/cadastrar', methods=['GET', 'POST'])
 def cadastrar_publicacao():
-    if 'user_id' not in session: return redirect(url_for('login'))
-    if not pode_gerenciar(): flash('Acesso restrito.'); return redirect(url_for('dashboard'))
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    # Nova Publicação é destinada somente às publicações gerais do templo.
+    # Avisos, limpeza e financeiro possuem fluxos próprios.
+    if session.get('funcao') not in ['super_admin', 'admin']:
+        flash('Acesso restrito.')
+        return redirect(url_for('dashboard'))
+
+    tipos_disponiveis = ['gira', 'projeto', 'evento']
+
     if request.method == 'POST':
-        titulo = request.form['titulo']; conteudo = request.form['conteudo']; tipo = request.form['tipo']
-        if not pode_gerenciar(tipo): flash('Você não tem permissão para este tipo de publicação.'); return redirect(url_for('admin'))
-        data_evento_str = request.form.get('data_evento', '')
+        titulo = request.form.get('titulo', '').strip()
+        conteudo = request.form.get('conteudo', '').strip()
+        tipo = request.form.get('tipo', '').strip()
+
+        # Não confiar apenas nas opções exibidas pelo HTML.
+        if tipo not in tipos_disponiveis:
+            flash('Tipo de publicação inválido.')
+            return redirect(url_for('cadastrar_publicacao'))
+
+        if not titulo or not conteudo:
+            flash('Título e conteúdo são obrigatórios.')
+            return redirect(url_for('cadastrar_publicacao'))
+
         data_evento = None
+        data_evento_str = request.form.get('data_evento', '').strip()
+
         if data_evento_str:
-            try: data_evento = datetime.strptime(data_evento_str, '%Y-%m-%dT%H:%M')
-            except: pass
-        nova = Publicacao(titulo=titulo, conteudo=conteudo, tipo=tipo, data_evento=data_evento)
-        db.session.add(nova); db.session.commit()
-        flash(f'✅ {tipo.capitalize()} cadastrado(a) com sucesso!')
-        if tipo == 'aviso': enviar_notificacao("📢 Novo Aviso - TUPBAO", titulo)
-        if tipo == 'limpeza': enviar_notificacao("🧹 Nova Limpeza - TUPBAO", titulo)
-        return redirect(url_for('admin'))
-    funcao = session.get('funcao', 'membro')
-    tipos_disponiveis = []
-    if funcao in ['super_admin', 'admin']: tipos_disponiveis = ['gira', 'aviso', 'projeto', 'limpeza', 'financeiro', 'noticia', 'conta', 'recebimento']
-    elif funcao == 'tesouraria': tipos_disponiveis = ['financeiro']
-    elif funcao == 'limpezas': tipos_disponiveis = ['limpeza']
-    return render_template('admin/cadastrar.html', tipos_disponiveis=tipos_disponiveis)
+            try:
+                data_evento = datetime.strptime(
+                    data_evento_str,
+                    '%Y-%m-%dT%H:%M'
+                )
+            except ValueError:
+                flash('Data do evento inválida.')
+                return redirect(url_for('cadastrar_publicacao'))
+
+        nova = Publicacao(
+            titulo=titulo,
+            conteudo=conteudo,
+            tipo=tipo,
+            data_evento=data_evento
+        )
+
+        db.session.add(nova)
+        db.session.commit()
+
+        nomes_tipos = {
+            'gira': 'Gira',
+            'projeto': 'Projeto Social',
+            'evento': 'Evento'
+        }
+
+        flash(
+            f'✅ {nomes_tipos.get(tipo, "Publicação")} '
+            'cadastrado(a) com sucesso!'
+        )
+
+        return redirect(url_for('dashboard'))
+
+    return render_template(
+        'admin/cadastrar.html',
+        tipos_disponiveis=tipos_disponiveis
+    )
 
 @app.route('/admin/editar/<int:id>', methods=['GET', 'POST'])
 def editar_publicacao(id):

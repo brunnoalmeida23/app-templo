@@ -4,65 +4,103 @@
 
 {% block content %}
 <div class="container mt-5 mb-5">
-    <h2 class="titulo-secao"><i class="bi bi-plus-circle"></i> Nova Publicação</h2>
-    <hr class="linha-ambar-left">
+
+    <div class="mb-4">
+        <h2 class="titulo-secao mb-1">
+            <i class="bi bi-plus-circle"></i> Nova Publicação
+        </h2>
+        <p class="text-muted mb-0">
+            Publique giras, projetos sociais e eventos do templo.
+        </p>
+        <hr class="linha-ambar-left">
+    </div>
 
     <div class="card shadow">
         <div class="card-body p-4">
+
             <form method="POST">
+
                 <div class="mb-3">
-                    <label class="form-label"><i class="bi bi-tag"></i> Tipo de Publicação</label>
+                    <label class="form-label">
+                        <i class="bi bi-tag"></i> Tipo de Publicação
+                    </label>
+
                     <select name="tipo" class="form-select" required>
                         <option value="">Selecione...</option>
+
                         {% if 'gira' in tipos_disponiveis %}
                         <option value="gira">🕯️ Gira</option>
                         {% endif %}
-                        {% if 'aviso' in tipos_disponiveis %}
-                        <option value="aviso">📢 Aviso</option>
-                        {% endif %}
+
                         {% if 'projeto' in tipos_disponiveis %}
                         <option value="projeto">🤲 Projeto Social</option>
                         {% endif %}
-                        {% if 'limpeza' in tipos_disponiveis %}
-                        <option value="limpeza">🧹 Limpeza</option>
-                        {% endif %}
-                        {% if 'financeiro' in tipos_disponiveis %}
-                        <option value="financeiro">💰 Financeiro</option>
-                        {% endif %}
-                        {% if 'noticia' in tipos_disponiveis %}
-                        <option value="noticia">📰 Notícia</option>
-                        {% endif %}
-                        {% if 'conta' in tipos_disponiveis %}
-                        <option value="conta">📝 Conta</option>
-                        {% endif %}
-                        {% if 'recebimento' in tipos_disponiveis %}
-                        <option value="recebimento">💵 Recebimento</option>
+
+                        {% if 'evento' in tipos_disponiveis %}
+                        <option value="evento">🎉 Evento</option>
                         {% endif %}
                     </select>
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label"><i class="bi bi-pencil"></i> Título</label>
-                    <input type="text" name="titulo" class="form-control" required placeholder="Ex: Conta de luz - Julho">
+                    <label class="form-label">
+                        <i class="bi bi-pencil"></i> Título
+                    </label>
+
+                    <input
+                        type="text"
+                        name="titulo"
+                        class="form-control"
+                        required
+                        placeholder="Ex: Festa de Erê - Cosme e Damião"
+                    >
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label"><i class="bi bi-clock"></i> Data do Evento (opcional)</label>
-                    <input type="datetime-local" name="data_evento" class="form-control">
-                    <small class="text-muted">Deixe em branco se for apenas um aviso ou informação.</small>
+                    <label class="form-label">
+                        <i class="bi bi-clock"></i> Data do Evento
+                    </label>
+
+                    <input
+                        type="datetime-local"
+                        name="data_evento"
+                        class="form-control"
+                    >
+
+                    <small class="text-muted">
+                        Informe a data quando a publicação estiver relacionada
+                        a uma gira, evento ou atividade com data definida.
+                    </small>
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label"><i class="bi bi-text-paragraph"></i> Conteúdo</label>
-                    <textarea name="conteudo" class="form-control" rows="6" required placeholder="Descreva aqui..."></textarea>
+                    <label class="form-label">
+                        <i class="bi bi-text-paragraph"></i> Conteúdo
+                    </label>
+
+                    <textarea
+                        name="conteudo"
+                        class="form-control"
+                        rows="6"
+                        required
+                        placeholder="Descreva a publicação..."
+                    ></textarea>
                 </div>
 
-                <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-ambar"><i class="bi bi-check-lg"></i> Publicar</button>
-                    <a href="/admin" class="btn btn-outline-secondary">Cancelar</a>
+                <div class="d-flex gap-2 flex-wrap">
+                    <button type="submit" class="btn btn-ambar">
+                        <i class="bi bi-check-lg"></i> Publicar
+                    </button>
+
+                    <a href="/dashboard" class="btn btn-outline-secondary">
+                        Cancelar
+                    </a>
                 </div>
+
             </form>
+
         </div>
     </div>
+
 </div>
 {% endblock %}

@@ -1,4 +1,4 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 
 {% block title %}Painel do Membro - TUPBAO{% endblock %}
 
@@ -19,10 +19,10 @@
         {% endif %}
     {% endwith %}
 
-    <!-- Alerta de notificaÃ§Ãµes bloqueadas -->
+    <!-- Alerta de notificações bloqueadas -->
     <div class="alert alert-warning alert-dismissible fade show mt-3" role="alert" id="alertaNotificacoes" style="display: none; border-left: 4px solid var(--ambar);">
-        <i class="bi bi-bell-slash"></i> <strong>NotificaÃ§Ãµes bloqueadas!</strong><br>
-        <small>Para receber avisos do templo, libere nas configuraÃ§Ãµes do Chrome.</small>
+        <i class="bi bi-bell-slash"></i> <strong>Notificações bloqueadas!</strong><br>
+        <small>Para receber avisos do templo, libere nas configurações do Chrome.</small>
         <a href="/guia" class="btn btn-sm btn-outline-dark ms-2">Ver guia</a>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
@@ -30,18 +30,18 @@
     <!-- Alerta de novos avisos -->
     {% if novos_avisos > 0 %}
     <div class="alert alert-warning alert-dismissible fade show mt-3" role="alert" style="border-left: 4px solid var(--ambar); background-color: #fff8e1;">
-        <i class="bi bi-bell-fill"></i> <strong>{{ novos_avisos }} novo(s) aviso(s)</strong> desde seu Ãºltimo acesso!
+        <i class="bi bi-bell-fill"></i> <strong>{{ novos_avisos }} novo(s) aviso(s)</strong> desde seu último acesso!
         <a href="/dashboard/avisos" class="btn btn-sm btn-outline-dark ms-2">Ver avisos</a>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
     {% endif %}
 
-    <!-- Cards de acesso rÃ¡pido -->
+    <!-- Cards de acesso rápido -->
     <div class="row mt-4">
         <div class="col-lg-4 col-md-6 mb-3">
             <a href="/agenda" class="card card-dash shadow-sm p-3 text-center text-decoration-none text-dark">
                 <i class="bi bi-calendar-heart" style="font-size: 2rem; color: var(--roxo);"></i>
-                <h5 class="mt-2">ðŸ“… Agenda</h5>
+                <h5 class="mt-2">📅 Agenda</h5>
                 <p class="text-muted small">Giras e eventos</p>
             </a>
         </div>
@@ -49,7 +49,7 @@
         <div class="col-lg-4 col-md-6 mb-3">
             <a href="/dashboard/avisos" class="card card-dash shadow-sm p-3 text-center text-decoration-none text-dark">
                 <i class="bi bi-megaphone" style="font-size: 2rem; color: var(--roxo);"></i>
-                <h5 class="mt-2">ðŸ“¢ Avisos</h5>
+                <h5 class="mt-2">📢 Avisos</h5>
                 <p class="text-muted small">Comunicados do Dirigente</p>
             </a>
         </div>
@@ -57,7 +57,7 @@
         <div class="col-lg-4 col-md-6 mb-3">
             <a href="/dashboard/limpezas" class="card card-dash shadow-sm p-3 text-center text-decoration-none text-dark">
                 <i class="bi bi-bucket" style="font-size: 2rem; color: var(--roxo);"></i>
-                <h5 class="mt-2">ðŸ§¹ Limpezas</h5>
+                <h5 class="mt-2">🧹 Limpezas</h5>
                 <p class="text-muted small">Escala da casa</p>
             </a>
         </div>
@@ -66,14 +66,14 @@
             <a href="/checkin/limpeza" class="card card-dash shadow-sm p-3 text-center text-decoration-none text-dark">
                 <i class="bi bi-check2-circle" style="font-size: 2rem; color: var(--roxo);"></i>
                 <h5 class="mt-2">Confirmar Limpeza</h5>
-                <p class="text-muted small">Registrar presenÃ§a na limpeza</p>
+                <p class="text-muted small">Registrar presença na limpeza</p>
             </a>
         </div>
 
         <div class="col-lg-4 col-md-6 mb-3">
             <a href="/minha-mensalidade" class="card card-dash shadow-sm p-3 text-center text-decoration-none text-dark">
                 <i class="bi bi-credit-card" style="font-size: 2rem; color: var(--roxo);"></i>
-                <h5 class="mt-2">ðŸ“Š Minhas Mensalidades</h5>
+                <h5 class="mt-2">📊 Minhas Mensalidades</h5>
                 <p class="text-muted small">Acompanhar pagamentos</p>
             </a>
         </div>
@@ -82,61 +82,36 @@
         <div class="col-lg-4 col-md-6 mb-3">
             <a href="/dashboard/financeiro" class="card card-dash shadow-sm p-3 text-center text-decoration-none text-dark">
                 <i class="bi bi-cash-coin" style="font-size: 2rem; color: var(--roxo);"></i>
-                <h5 class="mt-2">ðŸ’° Financeiro</h5>
-                <p class="text-muted small">TransparÃªncia financeira</p>
+                <h5 class="mt-2">💰 Financeiro</h5>
+                <p class="text-muted small">Transparência financeira</p>
             </a>
         </div>
         {% endif %}
 
+        {% if session.funcao in ['super_admin', 'admin'] %}
+        <div class="col-lg-4 col-md-6 mb-3">
+            <a href="/admin/cadastrar" class="card card-dash shadow-sm p-3 text-center text-decoration-none text-dark" style="border-top-color: var(--roxo);">
+                <i class="bi bi-plus-square" style="font-size: 2rem; color: var(--roxo);"></i>
+                <h5 class="mt-2">Nova Publicação</h5>
+                <p class="text-muted small">Publicar giras, eventos e conteúdos</p>
+            </a>
+        </div>
 
-	{% if session.funcao in ['super_admin', 'admin'] %}
-
-<div class="col-lg-4 col-md-6 mb-3">
-    <a href="/admin/cadastrar"
-       class="card card-dash shadow-sm p-3 text-center text-decoration-none text-dark"
-       style="border-top-color: var(--roxo);">
-
-        <i class="bi bi-plus-square"
-           style="font-size: 2rem; color: var(--roxo);"></i>
-
-        <h5 class="mt-2">Nova PublicaÃ§Ã£o</h5>
-
-        <p class="text-muted small">
-            Publicar giras, eventos e conteÃºdos
-        </p>
-
-    </a>
-</div>
-
-
-<div class="col-lg-4 col-md-6 mb-3">
-    <a href="/dashboard/avisos/cursos"
-       class="card card-dash shadow-sm p-3 text-center text-decoration-none text-dark"
-       style="border-top-color: var(--roxo);">
-
-        <i class="bi bi-mortarboard"
-           style="font-size: 2rem; color: var(--roxo);"></i>
-
-        <h5 class="mt-2">
-            Cursos
-        </h5>
-
-        <p class="text-muted small">
-            Turmas, alunos e comunicados
-        </p>
-
-    </a>
-</div>
-
-{% endif %}
-
+        <div class="col-lg-4 col-md-6 mb-3">
+            <a href="/dashboard/avisos/cursos" class="card card-dash shadow-sm p-3 text-center text-decoration-none text-dark" style="border-top-color: var(--roxo);">
+                <i class="bi bi-mortarboard" style="font-size: 2rem; color: var(--roxo);"></i>
+                <h5 class="mt-2">Cursos</h5>
+                <p class="text-muted small">Turmas, alunos e comunicados</p>
+            </a>
+        </div>
+        {% endif %}
 
         {% if session.funcao == 'super_admin' %}
         <div class="col-lg-4 col-md-6 mb-3">
             <a href="/admin/usuarios" class="card card-dash shadow-sm p-3 text-center text-decoration-none text-dark" style="border-top-color: var(--roxo);">
                 <i class="bi bi-people" style="font-size: 2rem; color: var(--roxo);"></i>
-                <h5 class="mt-2">Gerenciar UsuÃ¡rios</h5>
-                <p class="text-muted small">Cadastros, funÃ§Ãµes e equipes</p>
+                <h5 class="mt-2">Gerenciar Usuários</h5>
+                <p class="text-muted small">Cadastros, funções e equipes</p>
             </a>
         </div>
         {% endif %}
@@ -144,7 +119,7 @@
         <div class="col-lg-4 col-md-6 mb-3">
             <a href="/perfil" class="card card-dash shadow-sm p-3 text-center text-decoration-none text-dark">
                 <i class="bi bi-person-gear" style="font-size: 2rem; color: var(--roxo);"></i>
-                <h5 class="mt-2">ðŸ‘¤ Perfil</h5>
+                <h5 class="mt-2">👤 Perfil</h5>
                 <p class="text-muted small">Alterar senha</p>
             </a>
         </div>
@@ -165,7 +140,7 @@
     {% else %}
         <div class="text-center py-4 bg-white rounded shadow-sm">
             <i class="bi bi-megaphone" style="font-size: 2rem; color: var(--roxo);"></i>
-            <p class="mt-2 mb-0">Nenhum aviso no momento. AxÃ©! ðŸ™</p>
+            <p class="mt-2 mb-0">Nenhum aviso no momento. Axé! 🙏</p>
         </div>
     {% endif %}
 </div>

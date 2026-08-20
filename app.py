@@ -104,6 +104,47 @@ class TurmaCurso(db.Model):
     criado_em = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
 
+class AlunoCurso(db.Model):
+    __tablename__ = 'aluno_curso'
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    turma_curso_id = db.Column(
+        db.Integer,
+        db.ForeignKey('turma_curso.id', ondelete='CASCADE'),
+        nullable=False
+    )
+
+    nome = db.Column(db.String(120), nullable=False)
+    telefone = db.Column(db.String(20), nullable=False)
+
+    ativo = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=True
+    )
+
+    matricula_confirmada = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=True
+    )
+
+    criado_em = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow
+    )
+
+    __table_args__ = (
+        db.UniqueConstraint(
+            'turma_curso_id',
+            'telefone',
+            name='uq_aluno_curso_turma_telefone'
+        ),
+    )
+
+
 class Publicacao(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     titulo = db.Column(db.String(200), nullable=False)
@@ -403,6 +444,89 @@ def ver_avisos_cursos():
         turmas=turmas
     )
 
+@app.route('/dashboard/avisos/cursos/nova', methods=['POST'])
+def criar_turma_curso():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    if session.get('funcao') not in ['super_admin', 'admin']:
+        flash('Acesso restrito.')
+        return redirect(url_for('ver_avisos_internos'))
+
+    curso_nome = request.form.get('curso_nome', '').strip()
+    turma_nome = request.form.get('turma_nome', '').strip()
+    data_inicio_raw = request.form.get('data_inicio', '').strip()
+    data_fim_raw = request.form.get('data_fim', '').strip()
+
+    if not curso_nome or not turma_nome:
+        flash('Nome do curso e identificação da turma são obrigatórios.')
+        return redirect(url_for('ver_avisos_cursos'))
+
+    data_inicio = None
+    data_fim = None
+
+    try:
+        if data_inicio_raw:
+            data_inicio = datetime.strptime(
+                data_inicio_raw,
+                '%Y-%m-%d'
+            ).date()
+
+        if data_fim_raw:
+            data_fim = datetime.strptime(
+                data_fim_raw,
+                '%Y-%m-%d'
+            ).date()
+
+    except ValueError:
+        flash('Data inválida.')
+        return redirect(url_for('ver_avisos_cursos'))
+
+    if data_inicio and data_fim and data_fim < data_inicio:
+        flash('A data de término não pode ser anterior à data de início.')
+        return redirect(url_for('ver_avisos_cursos'))
+
+    turma = TurmaCurso(
+        curso_nome=curso_nome,
+        turma_nome=turma_nome,
+        data_inicio=data_inicio,
+        data_fim=data_fim,
+        ativo=True
+    )
+
+    db.session.add(turma)
+    db.session.commit()
+
+    flash(
+        f'✅ Turma {curso_nome} — {turma_nome} criada com sucesso!'
+    )
+
+    return redirect(url_for('ver_avisos_cursos'))
+
+
+@app.route(
+    '/dashboard/avisos/cursos/<int:turma_id>/desativar',
+    methods=['POST']
+)
+def desativar_turma_curso(turma_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    if session.get('funcao') not in ['super_admin', 'admin']:
+        flash('Acesso restrito.')
+        return redirect(url_for('ver_avisos_internos'))
+
+    turma = TurmaCurso.query.get_or_404(turma_id)
+
+    turma.ativo = False
+    db.session.commit()
+
+    flash(
+        f'✅ Turma {turma.curso_nome} — '
+        f'{turma.turma_nome} encerrada.'
+    )
+
+    return redirect(url_for('ver_avisos_cursos'))
 
 @app.route('/dashboard/avisos/novo/<publico>', methods=['GET', 'POST'])
 def novo_aviso(publico):

@@ -436,9 +436,16 @@ def novo_aviso(publico):
 
             return redirect(url_for('ver_avisos_internos'))
 
-        # O push público será ativado somente depois que os dispositivos
-        # externos estiverem classificados com tupbao_publico = 1.
-        flash('✅ Aviso público publicado com sucesso!')
+        push_enviado = enviar_push_publico(
+            "📢 Novo Comunicado - TUPBAO",
+            titulo
+        )
+
+        if push_enviado:
+            flash('✅ Aviso público publicado e notificação enviada!')
+        else:
+            flash('⚠️ Aviso público publicado, mas a notificação não pôde ser enviada.')
+
         return redirect(url_for('ver_avisos_publicos'))
 
     titulo_pagina = 'Novo Aviso Interno' if publico == 'interno' else 'Novo Aviso Público'

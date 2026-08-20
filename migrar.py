@@ -1,49 +1,69 @@
+import os
 import psycopg2
 
-# Banco antigo (Render)
-FONTE = "postgresql://tupbao:db0flqQoptkEvcatCjouKd1UUhJUyaja@dpg-d9ail56cjfls739gdtl0-a.oregon-postgres.render.com/tupbao"
 
-# Banco novo (Supabase)
-DESTINO = "postgresql://postgres:%40147448R%23o%40@db.cvaurclhtxkuirvwgkam.supabase.co:5432/postgres"
+FONTE = os.environ.get("DATABASE_URL_FONTE")
+DESTINO = os.environ.get("DATABASE_URL_DESTINO")
+
 
 def migrar():
+    if not FONTE or not DESTINO:
+        raise RuntimeError(
+            "Configure DATABASE_URL_FONTE e DATABASE_URL_DESTINO antes de executar."
+        )
+
     conn_fonte = psycopg2.connect(FONTE)
     conn_destino = psycopg2.connect(DESTINO)
-    
+
     cur_fonte = conn_fonte.cursor()
     cur_destino = conn_destino.cursor()
-    
-    tabelas = ['usuario', 'publicacao', 'aviso_lido', 'checkin_limpeza', 'mensalidade']
-    
-    for tabela in tabelas:
-        try:
+
+    tabelas = [
+        "usuario",
+        "publicacao",
+        "aviso_lido",
+        "checkin_limpeza",
+        "mensalidade"
+    ]
+
+    try:
+        for tabela in tabelas:
             cur_fonte.execute(f"SELECT * FROM {tabela}")
+
             colunas = [desc[0] for desc in cur_fonte.description]
             dados = cur_fonte.fetchall()
-            
-            for linha in dados:
-                valores = []
-                for v in linha:
-                    if isinstance(v, str):
-                        valores.append(f"'{v.replace(chr(39), chr(39)+chr(39))}'")
-                    elif v is None:
-                        valores.append('NULL')
-                    else:
-                        valores.append(str(v))
-                
-                sql = f"INSERT INTO {tabela} ({','.join(colunas)}) VALUES ({','.join(valores)}) ON CONFLICT DO NOTHING"
-                try:
-                    cur_destino.execute(sql)
-                except:
-                    pass
-            
-            conn_destino.commit()
-            print(f"✅ {tabela}: {len(dados)} registros migrados")
-        except Exception as e:
-            print(f"❌ {tabela}: {e}")
-    
-    conn_fonte.close()
-    conn_destino.close()
-    print("✅ Migração concluída!")
 
-migrar()
+            placeholders = ",".join(["%s"] * len(colunas))
+
+            sql = (
+                f"INSERT INTO {tabela} "
+                f"({','.join(colunas)}) "
+                f"VALUES ({placeholders}) "
+                f"ON CONFLICT DO NOTHING"
+            )
+
+            for linha in dados:
+                cur_destino.execute(sql, linha)
+
+            conn_destino.commit()
+
+            print(
+                f"OK: {tabela}: "
+                f"{len(dados)} registros processados"
+            )
+
+    except Exception:
+        conn_destino.rollback()
+        raise
+
+    finally:
+        cur_fonte.close()
+        cur_destino.close()
+        conn_fonte.close()
+        conn_destino.close()
+
+    print("Migração concluída.")
+
+
+if __name__ == "__main__":
+    migrar()

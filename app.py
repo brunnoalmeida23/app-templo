@@ -4,6 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 import os
+from services.notifications import enviar_notificacao as enviar_notificacao_service
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(24)
@@ -141,8 +142,9 @@ def pode_gerenciar_equipes_limpeza():
 
     return session.get('gerencia_limpezas', False)
 
-
 def enviar_notificacao(titulo, mensagem):
+    return enviar_notificacao_service(titulo, mensagem)
+
     try:
         onesignal_app_id = os.environ.get('ONESIGNAL_APP_ID', '')
         onesignal_api_key = os.environ.get('ONESIGNAL_API_KEY', '')
